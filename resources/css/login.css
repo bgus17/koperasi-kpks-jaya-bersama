@@ -1,0 +1,251 @@
+/*
+ * KOPERASI CAHAYA MULYA — Login Page Stylesheet
+ * File: resources/css/login.css
+ * Halaman: auth/login.blade.php
+ * Di-bundle oleh Vite terpisah dari app.css karena login tidak memakai layout utama.
+ */
+
+/* ── DESIGN TOKENS ── */
+:root {
+    --hijau:     #1a4731;
+    --hijau-mid: #2d6a4f;
+    --hijau-lt:  #52b788;
+    --emas:      #c9a84c;
+    --emas-lt:   #e8c97a;
+    --krem:      #f8f4ec;
+    --krem-drk:  #ede7d9;
+    --putih:     #ffffff;
+    --abu:       #6b7280;
+    --merah:     #c0392b;
+}
+
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── BODY ── */
+body {
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    background: var(--hijau);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Dekoratif latar */
+body::before {
+    content: '';
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(82,183,136,.18) 0%, transparent 70%);
+    top: -100px; right: -100px;
+    border-radius: 50%;
+}
+
+body::after {
+    content: '';
+    position: absolute;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(201,168,76,.12) 0%, transparent 70%);
+    bottom: -50px; left: -80px;
+    border-radius: 50%;
+}
+
+/* ── PANEL KIRI — BRANDING ── */
+.branding {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px;
+    position: relative;
+    z-index: 1;
+}
+
+.brand-logo {
+    width: 64px; height: 64px;
+    background: var(--emas);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px;
+    margin-bottom: 32px;
+    box-shadow: 0 8px 24px rgba(201,168,76,.3);
+}
+
+.brand-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 42px;
+    color: var(--putih);
+    line-height: 1.1;
+    margin-bottom: 16px;
+}
+
+.brand-name em {
+    font-style: italic;
+    color: var(--emas-lt);
+}
+
+.brand-desc {
+    font-size: 15px;
+    color: rgba(255,255,255,.55);
+    line-height: 1.6;
+    max-width: 340px;
+}
+
+.brand-stats {
+    display: flex;
+    gap: 32px;
+    margin-top: 48px;
+}
+
+.bstat {
+    border-top: 2px solid rgba(255,255,255,.15);
+    padding-top: 14px;
+}
+
+.bstat-val {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    color: var(--emas-lt);
+}
+
+.bstat-label {
+    font-size: 12px;
+    color: rgba(255,255,255,.4);
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    margin-top: 3px;
+}
+
+/* ── PANEL KANAN — FORM LOGIN ── */
+.login-panel {
+    width: 420px;
+    background: var(--krem);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px 48px;
+    position: relative;
+    z-index: 1;
+}
+
+.login-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: linear-gradient(to bottom, var(--emas), transparent);
+}
+
+.login-header { margin-bottom: 36px; }
+
+.login-header h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 30px;
+    color: var(--hijau);
+    margin-bottom: 6px;
+}
+
+.login-header p { font-size: 14px; color: var(--abu); }
+
+/* ── FORM ELEMENTS ── */
+.form-group { margin-bottom: 18px; }
+
+label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--hijau);
+    letter-spacing: .3px;
+    text-transform: uppercase;
+    margin-bottom: 7px;
+}
+
+input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--krem-drk);
+    border-radius: 9px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--hijau);
+    background: var(--putih);
+    transition: all .2s;
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--hijau-lt);
+    box-shadow: 0 0 0 3px rgba(82,183,136,.15);
+}
+
+input.is-invalid { border-color: var(--merah); }
+
+.invalid-feedback {
+    font-size: 12px;
+    color: var(--merah);
+    margin-top: 5px;
+    display: block;
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.form-check input[type=checkbox] {
+    width: 16px; height: 16px;
+    accent-color: var(--hijau);
+}
+
+.form-check label {
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 400;
+    font-size: 13px;
+    color: var(--abu);
+    margin: 0;
+}
+
+/* ── TOMBOL LOGIN ── */
+.btn-login {
+    width: 100%;
+    padding: 13px;
+    background: var(--hijau);
+    color: var(--putih);
+    border: none;
+    border-radius: 9px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .2s;
+    letter-spacing: .2px;
+}
+
+.btn-login:hover {
+    background: var(--hijau-mid);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(26,71,49,.25);
+}
+
+.btn-login:active { transform: translateY(0); }
+
+/* ── FOOTER ── */
+.login-footer {
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--krem-drk);
+    font-size: 12px;
+    color: var(--abu);
+    text-align: center;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+    body { flex-direction: column; }
+    .branding { display: none; }
+    .login-panel { width: 100%; padding: 40px 28px; }
+}
