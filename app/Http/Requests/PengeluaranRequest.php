@@ -56,6 +56,9 @@ class PengeluaranRequest extends FormRequest
             $jumlah = (int) round($volume * $hargaSatuan);
         }
 
+        $jenisTransaksi = $this->normalizeJenisTransaksi($this->input('jenis_transaksi'));
+        $ledger = $this->ledgerValues($jenisTransaksi, $jumlah);
+
         [$mandorId, $mandorNama] = $this->automaticMandorSnapshot();
 
         $this->workerDetails = $workerDetails;
@@ -66,6 +69,10 @@ class PengeluaranRequest extends FormRequest
             'mandor_id'        => $mandorId,
             'mandor'           => $mandorNama,
             'jumlah'           => $jumlah,
+            'jenis_transaksi'  => $jenisTransaksi,
+            'debet'            => $ledger['debet'],
+            'kredit'           => $ledger['kredit'],
+            'saldo'            => $ledger['saldo'],
             'harga_satuan'     => $hargaSatuan ?: null,
             'volume'           => $volume ?: null,
             'luas_ha'          => !empty($workerDetails) ? ($workerTotals['luas_ha'] ?: null) : $this->nullableDecimal('luas_ha'),
@@ -100,6 +107,10 @@ class PengeluaranRequest extends FormRequest
             'satuan'                      => 'nullable|string|max:30',
             'harga_satuan'                => 'nullable|integer|min:0',
             'jumlah'                      => 'required|integer|min:1',
+            'jenis_transaksi'             => 'required|in:debet,kredit,saldo',
+            'debet'                       => 'nullable|integer|min:0',
+            'kredit'                      => 'nullable|integer|min:0',
+            'saldo'                       => 'nullable|integer',
             'supplier_vendor'             => 'nullable|string|max:150',
             'no_referensi'                => 'nullable|string|max:100',
             'keterangan'                  => 'nullable|string|max:1000',
@@ -163,6 +174,8 @@ class PengeluaranRequest extends FormRequest
             'tanggal.date'         => 'Format tanggal tidak valid.',
             'jumlah.required'      => 'Jumlah biaya wajib diisi.',
             'jumlah.min'           => 'Jumlah biaya harus lebih dari 0.',
+            'jenis_transaksi.required' => 'Jenis transaksi kas wajib dipilih.',
+            'jenis_transaksi.in'       => 'Jenis transaksi kas harus Debet, Kredit, atau Saldo.',
         ];
     }
 
@@ -186,6 +199,10 @@ class PengeluaranRequest extends FormRequest
             'sub_id',
             'tanggal',
             'jumlah',
+            'jenis_transaksi',
+            'debet',
+            'kredit',
+            'saldo',
             'keterangan',
             'sudah_bayar',
         ]);
@@ -238,6 +255,29 @@ class PengeluaranRequest extends FormRequest
             ],
             'pupuk' => [
                 'blok',
+                'volume',
+                'satuan',
+                'harga_satuan',
+                'supplier_vendor',
+                'no_referensi',
+            ],
+            'alat_berat' => [
+                'blok',
+                'volume',
+                'satuan',
+                'harga_satuan',
+                'supplier_vendor',
+                'no_referensi',
+            ],
+            'perlengkapan' => [
+                'blok',
+                'volume',
+                'satuan',
+                'harga_satuan',
+                'supplier_vendor',
+                'no_referensi',
+            ],
+            'insentive' => [
                 'volume',
                 'satuan',
                 'harga_satuan',
@@ -373,6 +413,34 @@ class PengeluaranRequest extends FormRequest
             'volume'          => array_sum(array_column($details, 'volume')),
             'jumlah'          => array_sum(array_column($details, 'upah')),
         ];
+    }
+
+    private function normalizeJenisTransaksi(mixed $value): string
+    {
+        $value = strtolower(trim((string) $value));
+
+        return in_array($value, ['debet', 'kredit', 'saldo'], true) ? $value : 'kredit';
+    }
+
+    private function ledgerValues(string $jenisTransaksi, int $jumlah): array
+    {
+        return match ($jenisTransaksi) {
+            'debet' => [
+                'debet' => $jumlah,
+                'kredit' => 0,
+                'saldo' => $jumlah,
+            ],
+            'saldo' => [
+                'debet' => 0,
+                'kredit' => 0,
+                'saldo' => -$jumlah,
+            ],
+            default => [
+                'debet' => 0,
+                'kredit' => $jumlah,
+                'saldo' => -$jumlah,
+            ],
+        };
     }
 
     private function nullableTrimmed(string $key): ?string

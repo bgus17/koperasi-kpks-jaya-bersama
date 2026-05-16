@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\PendapatanRequest;
 use App\Http\Resources\PendapatanResource;
 use App\Models\Pendapatan;
+use App\Services\KeuanganLedgerService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -126,6 +127,7 @@ class PendapatanController extends Controller
 
         $grandDebet  = $summary->sum('total_debet');
         $grandKredit = $summary->sum('total_kredit');
+        $ledgerSummary = KeuanganLedgerService::summary((int) $tahun);
 
         return response()->json([
             'success' => true,
@@ -134,6 +136,13 @@ class PendapatanController extends Controller
             'grand_total' => [
                 'debet'  => $grandDebet,
                 'kredit' => $grandKredit,
+                'saldo' => $ledgerSummary['pendapatan_saldo'],
+            ],
+            'grand_total_terintegrasi' => [
+                'debet' => $ledgerSummary['total_debet'],
+                'kredit' => $ledgerSummary['total_kredit'],
+                'saldo_akhir' => $ledgerSummary['saldo_akhir'],
+                'pengeluaran_kredit' => $ledgerSummary['pengeluaran_kredit'],
             ],
         ]);
     }

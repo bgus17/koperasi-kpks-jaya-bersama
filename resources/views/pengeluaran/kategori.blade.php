@@ -29,9 +29,21 @@
 {{-- STAT RINGKASAN --}}
 <div class="kategori-stats">
     <div class="kategori-stat">
-        <div class="kategori-stat-label">Total Pengeluaran</div>
+        <div class="kategori-stat-label">Total Kredit Pengeluaran</div>
         <div class="kategori-stat-value merah">
             Rp {{ number_format($totalKategori, 0, ',', '.') }}
+        </div>
+    </div>
+    <div class="kategori-stat">
+        <div class="kategori-stat-label">Total Debet Pengeluaran</div>
+        <div class="kategori-stat-value">
+            Rp {{ number_format($totalDebetKategori, 0, ',', '.') }}
+        </div>
+    </div>
+    <div class="kategori-stat">
+        <div class="kategori-stat-label">Mutasi Saldo</div>
+        <div class="kategori-stat-value {{ $totalMutasiSaldo < 0 ? 'merah' : '' }}">
+            Rp {{ number_format($totalMutasiSaldo, 0, ',', '.') }}
         </div>
     </div>
     <div class="kategori-stat">
@@ -54,42 +66,84 @@
 </p>
 
 {{-- CARD GRID SUB-ITEM --}}
-<div class="sub-menu-grid">
-    @forelse($subList as $index => $subNama)
-        @php
-            $info    = $totals->get($subNama);
-            $total   = $info?->total ?? 0;
-            $jml     = $info?->jml_transaksi ?? 0;
-            $last    = $info?->transaksi_terakhir;
-            $hasData = $jml > 0;
-        @endphp
+@php
+    $alatTulisKantor = ['Kertas,Pena,Tinta dll', 'Perlengkapan Kantor'];
 
-        <a href="{{ route('pengeluaran.sub.index', [$slug, urlencode($subNama)]) }}"
-           class="sub-menu-card {{ $hasData ? 'has-data' : '' }}">
+    if ($slug === 'pembelian-pupuk') {
+        $subGroups = collect([
+            ['title' => 'Pembelian Pupuk', 'items' => $subList->filter(fn ($item) => str_starts_with($item->nama_sub, 'Pupuk'))->values()],
+            ['title' => 'Pembelian Racun', 'items' => $subList->reject(fn ($item) => str_starts_with($item->nama_sub, 'Pupuk'))->values()],
+        ]);
+    } elseif ($slug === 'perlengkapan') {
+        $subGroups = collect([
+            ['title' => 'Perlengkapan', 'items' => $subList->reject(fn ($item) => in_array($item->nama_sub, $alatTulisKantor, true))->values()],
+            ['title' => 'Alat Tulis Kantor', 'items' => $subList->filter(fn ($item) => in_array($item->nama_sub, $alatTulisKantor, true))->values()],
+        ]);
+    } else {
+        $subGroups = collect([
+            ['title' => null, 'items' => $subList->values()],
+        ]);
+    }
+@endphp
 
-            <div class="sub-card-nomor">{{ $index + 1 }}</div>
-            <div class="sub-card-nama">{{ $subNama }}</div>
+@if($subList->isEmpty())
+    <div class="sub-menu-grid">
+        <p style="color:var(--abu);grid-column:1/-1;">Tidak ada kegiatan untuk kategori ini.</p>
+    </div>
+@else
+    @foreach($subGroups as $group)
+        @continue($group['items']->isEmpty())
 
-            @if($hasData)
-                <div class="sub-card-total">
-                    Rp {{ number_format($total, 0, ',', '.') }}
+        <section class="sub-menu-section">
+            @if($group['title'])
+                <div class="sub-menu-section-title">
+                    <span>{{ $group['title'] }}</span>
+                    <small>{{ $group['items']->count() }} opsi</small>
                 </div>
-                <div class="sub-card-meta">
-                    <span>{{ $jml }} transaksi</span>
-                    @if($last)
-                        <span>·</span>
-                        <span>Terakhir: {{ \Carbon\Carbon::parse($last)->format('d/m/Y') }}</span>
-                    @endif
-                </div>
-            @else
-                <div class="sub-card-meta">Belum ada transaksi</div>
             @endif
 
-            <div class="sub-card-arrow">→</div>
-        </a>
-    @empty
-        <p style="color:var(--abu);grid-column:1/-1;">Tidak ada kegiatan untuk kategori ini.</p>
-    @endforelse
-</div>
+            <div class="sub-menu-grid {{ $group['title'] ? 'sub-menu-grid--sectioned' : '' }}">
+                @foreach($group['items'] as $index => $subItem)
+                    @php
+                        $subNama = $subItem->nama_sub;
+                        $info    = $totals->get($subItem->id);
+                        $debet   = $info?->total_debet ?? 0;
+                        $kredit  = $info?->total_kredit ?? 0;
+                        $saldo   = $info?->total_saldo ?? 0;
+                        $total   = $kredit ?: ($debet ?: abs($saldo));
+                        $totalLabel = $kredit > 0 ? 'Kredit' : ($debet > 0 ? 'Debet' : 'Saldo');
+                        $jml     = $info?->jml_transaksi ?? 0;
+                        $last    = $info?->transaksi_terakhir;
+                        $hasData = $jml > 0;
+                    @endphp
+
+                    <a href="{{ route('pengeluaran.sub.index', [$slug, $subItem->id]) }}"
+                       class="sub-menu-card {{ $hasData ? 'has-data' : '' }}">
+
+                        <div class="sub-card-nomor">{{ $index + 1 }}</div>
+                        <div class="sub-card-nama">{{ $subNama }}</div>
+
+                        @if($hasData)
+                            <div class="sub-card-total">
+                                {{ $totalLabel }} Rp {{ number_format($total, 0, ',', '.') }}
+                            </div>
+                            <div class="sub-card-meta">
+                                <span>{{ $jml }} transaksi</span>
+                                @if($last)
+                                    <span>·</span>
+                                    <span>Terakhir: {{ \Carbon\Carbon::parse($last)->format('d/m/Y') }}</span>
+                                @endif
+                            </div>
+                        @else
+                            <div class="sub-card-meta">Belum ada transaksi</div>
+                        @endif
+
+                        <div class="sub-card-arrow">→</div>
+                    </a>
+                @endforeach
+            </div>
+        </section>
+    @endforeach
+@endif
 
 @endsection

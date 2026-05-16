@@ -148,7 +148,9 @@
                     <tr>
                         <th>No</th>
                         <th>Kategori</th>
-                        <th class="text-right">Total (Rp)</th>
+                        <th class="text-right">Debet</th>
+                        <th class="text-right">Kredit</th>
+                        <th class="text-right">Mutasi Saldo</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -156,12 +158,18 @@
                     <tr>
                         <td><span class="badge-nomkat" style="background:var(--emas);color:var(--hijau);">{{ $row->nomor_kategori }}</span></td>
                         <td style="font-size:12px;">{{ $row->kategori }}</td>
+                        <td class="text-right rp" style="font-size:12px;color:var(--hijau-mid);">
+                            {{ $row->total_debet > 0 ? number_format($row->total_debet, 0, ',', '.') : '—' }}
+                        </td>
                         <td class="text-right rp" style="font-size:12px;color:var(--merah);">
-                            {{ $row->total_jumlah > 0 ? number_format($row->total_jumlah, 0, ',', '.') : '—' }}
+                            {{ $row->total_kredit > 0 ? number_format($row->total_kredit, 0, ',', '.') : '—' }}
+                        </td>
+                        <td class="text-right rp {{ $row->total_saldo < 0 ? 'rp-kredit' : 'rp-saldo' }}" style="font-size:12px;">
+                            {{ $row->total_saldo > 0 ? '+' : '' }}{{ number_format($row->total_saldo, 0, ',', '.') }}
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="3" class="text-center" style="padding:20px;color:var(--abu);font-size:13px;">Tidak ada data.</td></tr>
+                    <tr><td colspan="5" class="text-center" style="padding:20px;color:var(--abu);font-size:13px;">Tidak ada data.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -216,7 +224,7 @@
             @if($rekap)
             <tfoot>
                 <tr style="background:var(--hijau);color:var(--putih);">
-                    <td colspan="3" style="padding:11px 14px;font-weight:600;font-family:'DM Serif Display',serif;">GRAND TOTAL</td>
+                    <td colspan="3" style="padding:11px 14px;font-weight:600;font-family:'DM Serif Display',serif;">GRAND TOTAL TERINTEGRASI</td>
                     <td class="text-right rp" style="padding:11px 14px;font-weight:600;color:var(--emas-lt);">{{ number_format($rekap->grand_total_debet, 0, ',', '.') }}</td>
                     <td class="text-right rp" style="padding:11px 14px;font-weight:600;color:#f28b82;">{{ number_format($rekap->grand_total_kredit, 0, ',', '.') }}</td>
                     <td class="text-right rp" style="padding:11px 14px;font-weight:600;color:var(--emas-lt);">{{ number_format($rekap->saldo_akhir, 0, ',', '.') }}</td>
@@ -242,6 +250,9 @@
                     <th>Kegiatan</th>
                     <th>Lapangan / Output</th>
                     <th class="text-right">Jumlah (Rp)</th>
+                    <th class="text-right">Debet</th>
+                    <th class="text-right">Kredit</th>
+                    <th class="text-right">Saldo</th>
                 </tr>
             </thead>
             <tbody>
@@ -250,7 +261,7 @@
                     @if($row->kategori?->nomor_kategori !== $prevKat2)
                         @php $prevKat2 = $row->kategori?->nomor_kategori; @endphp
                         <tr class="kategori-row">
-                            <td colspan="5" style="padding:8px 14px;font-size:12px;color:var(--hijau);">
+                            <td colspan="8" style="padding:8px 14px;font-size:12px;color:var(--hijau);">
                                 <span class="badge-nomkat" style="background:var(--emas);color:var(--hijau);">{{ $row->kategori?->nomor_kategori }}</span>
                                 &nbsp;{{ $row->kategori?->nama_kategori }}
                             </td>
@@ -276,6 +287,15 @@
                         <td class="text-right rp {{ $row->jumlah > 0 ? 'rp-kredit' : '' }}" style="font-size:13px;">
                             {{ $row->jumlah > 0 ? number_format($row->jumlah, 0, ',', '.') : '—' }}
                         </td>
+                        <td class="text-right rp {{ $row->debet > 0 ? 'rp-debet' : '' }}" style="font-size:13px;">
+                            {{ $row->debet > 0 ? number_format($row->debet, 0, ',', '.') : '—' }}
+                        </td>
+                        <td class="text-right rp {{ $row->kredit > 0 ? 'rp-kredit' : '' }}" style="font-size:13px;">
+                            {{ $row->kredit > 0 ? number_format($row->kredit, 0, ',', '.') : '—' }}
+                        </td>
+                        <td class="text-right rp {{ $row->saldo < 0 ? 'rp-kredit' : 'rp-saldo' }}" style="font-size:13px;">
+                            {{ $row->saldo > 0 ? '+' : '' }}{{ number_format($row->saldo, 0, ',', '.') }}
+                        </td>
                     </tr>
                 @endforeach
             </tbody>
@@ -283,7 +303,10 @@
             <tfoot>
                 <tr style="background:var(--hijau);color:var(--putih);">
                     <td colspan="4" style="padding:11px 14px;font-weight:600;font-family:'DM Serif Display',serif;">TOTAL PENGELUARAN</td>
-                    <td class="text-right rp" style="padding:11px 14px;font-weight:600;color:#f28b82;">{{ number_format($rekap->grand_total_kredit, 0, ',', '.') }}</td>
+                    <td class="text-right rp" style="padding:11px 14px;font-weight:600;color:#f28b82;">{{ number_format($ledgerSummary['pengeluaran_jumlah'], 0, ',', '.') }}</td>
+                    <td class="text-right rp" style="padding:11px 14px;font-weight:600;color:var(--emas-lt);">{{ number_format($ledgerSummary['pengeluaran_debet'], 0, ',', '.') }}</td>
+                    <td class="text-right rp" style="padding:11px 14px;font-weight:600;color:#f28b82;">{{ number_format($ledgerSummary['pengeluaran_kredit'], 0, ',', '.') }}</td>
+                    <td class="text-right rp" style="padding:11px 14px;font-weight:600;color:var(--emas-lt);">{{ number_format($ledgerSummary['pengeluaran_saldo'], 0, ',', '.') }}</td>
                 </tr>
             </tfoot>
             @endif

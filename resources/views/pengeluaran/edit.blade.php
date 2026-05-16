@@ -26,6 +26,8 @@
     <span style="color:var(--abu);">
         Jumlah saat ini: <strong>Rp {{ number_format($pengeluaran->jumlah, 0, ',', '.') }}</strong>
         &nbsp;|&nbsp;
+        Transaksi: <strong>{{ $pengeluaran->jenis_transaksi_label }}</strong>
+        &nbsp;|&nbsp;
         Tanggal: <strong>{{ $pengeluaran->tanggal->format('d M Y') }}</strong>
     </span>
 </div>

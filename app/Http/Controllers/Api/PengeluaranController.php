@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\PengeluaranRequest;
 use App\Models\Karyawan;
 use App\Models\Pengeluaran;
+use App\Services\KeuanganLedgerService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -133,13 +134,8 @@ class PengeluaranController extends Controller
     {
         $tahun = $request->input('tahun', now()->year);
 
-        $summary = DB::table('pengeluaran')
-            ->whereYear('tanggal', $tahun)
-            ->join('kategori_pengeluaran as kp', 'pengeluaran.kategori_id', '=', 'kp.id')
-            ->selectRaw('kp.nomor_kategori, kp.nama_kategori as kategori, SUM(pengeluaran.jumlah) as total_jumlah')
-            ->groupBy('kp.nomor_kategori', 'kp.nama_kategori')
-            ->orderBy('kp.nomor_kategori')
-            ->get();
+        $summary = KeuanganLedgerService::pengeluaranPerKategori((int) $tahun);
+        $ledgerSummary = KeuanganLedgerService::summary((int) $tahun);
 
         $grandTotal = $summary->sum('total_jumlah');
 
@@ -148,6 +144,11 @@ class PengeluaranController extends Controller
             'tahun'       => $tahun,
             'data'        => $summary,
             'grand_total' => $grandTotal,
+            'grand_total_ledger' => [
+                'debet' => $ledgerSummary['pengeluaran_debet'],
+                'kredit' => $ledgerSummary['pengeluaran_kredit'],
+                'saldo' => $ledgerSummary['pengeluaran_saldo'],
+            ],
         ]);
     }
 
@@ -184,6 +185,9 @@ class PengeluaranController extends Controller
             'kutipBerondolDetail' => ['blok', 'mandor'],
             'perawatanDetail' => ['blok', 'mandor'],
             'pupukDetail' => ['blok', 'supplier_vendor', 'no_referensi'],
+            'alatBeratDetail' => ['blok', 'supplier_vendor', 'no_referensi'],
+            'perlengkapanDetail' => ['blok', 'supplier_vendor', 'no_referensi'],
+            'insentiveDetail' => ['supplier_vendor', 'no_referensi'],
             'umumDetail' => ['supplier_vendor', 'no_referensi'],
         ];
     }

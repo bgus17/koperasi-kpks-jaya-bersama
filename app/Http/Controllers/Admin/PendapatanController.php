@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PendapatanRequest;
 use App\Models\Pendapatan;
+use App\Services\KeuanganLedgerService;
 use Illuminate\Http\Request;
 
 class PendapatanController extends Controller
@@ -34,20 +35,32 @@ class PendapatanController extends Controller
             $query->where('keterangan', 'like', "%{$search}%");
         }
 
-        // Hitung total dari SEMUA data di database (tanpa filter)
-        $totalDebetAll = Pendapatan::sum('debet');
-        $totalKreditAll = Pendapatan::sum('kredit');
-        $totalSaldoAll = Pendapatan::sum('saldo');
-        $jumlahRecordAll = Pendapatan::count();
+        $summaryYear = $request->filled('tahun') ? (int) $request->tahun : null;
+        $ledgerSummary = KeuanganLedgerService::summary($summaryYear);
+        $summaryLabel = $summaryYear ? "Tahun {$summaryYear}" : 'Semua Data';
+        $totalDebetAll = $ledgerSummary['total_debet'];
+        $totalKreditAll = $ledgerSummary['total_kredit'];
+        $totalSaldoAll = $ledgerSummary['saldo_akhir'];
+        $jumlahRecordAll = $ledgerSummary['jumlah_record'];
 
         $pendapatan = $query->orderBy('nomor_kategori')->orderBy('id')->paginate(20)->withQueryString();
 
-        $tahunList = Pendapatan::select('tahun')->distinct()->orderBy('tahun', 'desc')->pluck('tahun');
+        $tahunList = KeuanganLedgerService::tahunList();
         
         // Hanya tampilkan 3 kategori yang diizinkan di filter
         $kategoriList = collect($this->allowedCategories);
 
-        return view('pendapatan.index', compact('pendapatan', 'tahunList', 'kategoriList', 'totalDebetAll', 'totalKreditAll', 'totalSaldoAll', 'jumlahRecordAll'));
+        return view('pendapatan.index', compact(
+            'pendapatan',
+            'tahunList',
+            'kategoriList',
+            'ledgerSummary',
+            'summaryLabel',
+            'totalDebetAll',
+            'totalKreditAll',
+            'totalSaldoAll',
+            'jumlahRecordAll'
+        ));
     }
 
     public function create()

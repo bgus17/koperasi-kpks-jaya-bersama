@@ -25,7 +25,7 @@
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <a href="{{ route('pengeluaran.kategori', $slug) }}" class="btn btn-outline">← Kembali</a>
-        <a href="{{ route('pengeluaran.sub.create', [$slug, urlencode($subKategori)]) }}"
+        <a href="{{ route('pengeluaran.sub.create', [$slug, $sub->id]) }}"
            class="btn btn-primary">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                 <path d="M12 5v14M5 12h14"/>
@@ -39,7 +39,7 @@
 <div class="card" style="margin-bottom:20px;">
     <div class="card-body" style="padding:16px 20px;">
         <form method="GET"
-              action="{{ route('pengeluaran.sub.index', [$slug, urlencode($subKategori)]) }}"
+              action="{{ route('pengeluaran.sub.index', [$slug, $sub->id]) }}"
               class="filter-bar">
             <div class="form-group" style="min-width:130px;max-width:160px;">
                 <label>Tahun</label>
@@ -69,7 +69,7 @@
             </div>
             <div style="display:flex;gap:8px;align-items:flex-end;padding-bottom:1px;">
                 <button type="submit" class="btn btn-primary btn-sm">Filter</button>
-                <a href="{{ route('pengeluaran.sub.index', [$slug, urlencode($subKategori)]) }}"
+                <a href="{{ route('pengeluaran.sub.index', [$slug, $sub->id]) }}"
                    class="btn btn-outline btn-sm">Reset</a>
             </div>
         </form>
@@ -88,17 +88,46 @@
     } elseif ($profile === 'perawatan') {
         $outputLabel = 'Total Luas Kerja';
         $outputValue = number_format($totalLuas, 2, ',', '.') . ' ha';
+    } elseif ($profile === 'alat_berat') {
+        $outputLabel = 'Total Jam Alat / HM';
+        $outputValue = number_format($totalVolume, 2, ',', '.') . ' HM';
+    } elseif ($profile === 'perlengkapan') {
+        $outputLabel = 'Total Perlengkapan';
+        $outputValue = number_format($totalVolume, 2, ',', '.');
+    } elseif ($profile === 'insentive') {
+        $outputLabel = 'Total Penerima';
+        $outputValue = number_format($totalVolume, 2, ',', '.') . ' orang';
     } else {
         $outputLabel = 'Total Volume';
         $outputValue = number_format($totalVolume, 2, ',', '.');
     }
+
+    $volumeCaption = match ($profile) {
+        'alat_berat' => 'Jam Alat / HM',
+        'perlengkapan' => 'Jumlah / Volume',
+        'insentive' => 'Penerima / Periode',
+        'pupuk' => 'Jumlah Barang',
+        default => 'Output / Volume',
+    };
 @endphp
 
 <div class="stats-grid" style="margin-bottom:20px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));">
     <div class="stat-card">
-        <div class="stat-label">Total Pengeluaran</div>
-        <div class="stat-value kredit rp">Rp {{ number_format($totalAll, 0, ',', '.') }}</div>
+        <div class="stat-label">Total Kredit Pengeluaran</div>
+        <div class="stat-value kredit rp">Rp {{ number_format($totalKredit, 0, ',', '.') }}</div>
         <div class="stat-icon">📉</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Total Debet Pengeluaran</div>
+        <div class="stat-value rp">Rp {{ number_format($totalDebet, 0, ',', '.') }}</div>
+        <div class="stat-icon">📈</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Mutasi Saldo</div>
+        <div class="stat-value {{ $totalSaldo < 0 ? 'kredit' : 'saldo' }} rp">
+            Rp {{ number_format($totalSaldo, 0, ',', '.') }}
+        </div>
+        <div class="stat-icon">💰</div>
     </div>
     <div class="stat-card">
         <div class="stat-label">Jumlah Transaksi</div>
@@ -136,8 +165,9 @@
                 <tr>
                     <th class="text-center" style="width:100px;">Tanggal</th>
                     <th>Lapangan</th>
-                    <th>Output / Volume</th>
+                    <th>{{ $volumeCaption }}</th>
                     <th class="text-right">Biaya (Rp)</th>
+                    <th>Transaksi Kas</th>
                     <th class="text-center">Status</th>
                     <th>Keterangan</th>
                     <th class="text-center" style="width:130px;">Aksi</th>
@@ -211,6 +241,20 @@
                         <td class="text-right rp rp-kredit" style="font-weight:600;font-size:14px;">
                             {{ number_format($row->jumlah, 0, ',', '.') }}
                         </td>
+                        <td style="font-size:12px;color:var(--abu);white-space:nowrap;">
+                            <span class="badge-status" style="background:var(--krem);color:var(--hijau);">
+                                {{ $row->jenis_transaksi_label }}
+                            </span>
+                            <div class="rp {{ $row->debet > 0 ? 'rp-debet' : '' }}">
+                                Debet: {{ $row->debet > 0 ? number_format($row->debet, 0, ',', '.') : '—' }}
+                            </div>
+                            <div class="rp {{ $row->kredit > 0 ? 'rp-kredit' : '' }}">
+                                Kredit: {{ $row->kredit > 0 ? number_format($row->kredit, 0, ',', '.') : '—' }}
+                            </div>
+                            <div class="rp {{ $row->saldo < 0 ? 'rp-kredit' : 'rp-saldo' }}">
+                                Saldo: {{ $row->saldo > 0 ? '+' : '' }}{{ number_format($row->saldo, 0, ',', '.') }}
+                            </div>
+                        </td>
                         <td class="text-center">
                             <span class="badge-status {{ $row->sudah_bayar ? 'status-paid' : 'status-unpaid' }}">
                                 {{ $row->sudah_bayar ? 'Lunas' : 'Belum' }}
@@ -221,10 +265,10 @@
                         </td>
                         <td class="text-center">
                             <div style="display:flex;gap:6px;justify-content:center;">
-                                <a href="{{ route('pengeluaran.sub.edit', [$slug, urlencode($subKategori), $row]) }}"
+                                <a href="{{ route('pengeluaran.sub.edit', [$slug, $sub->id, $row]) }}"
                                    class="btn btn-outline btn-sm">Edit</a>
                                 <form method="POST"
-                                      action="{{ route('pengeluaran.sub.destroy', [$slug, urlencode($subKategori), $row]) }}"
+                                      action="{{ route('pengeluaran.sub.destroy', [$slug, $sub->id, $row]) }}"
                                       onsubmit="return confirm('Hapus data ini?')">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
@@ -234,10 +278,10 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center"
+                        <td colspan="8" class="text-center"
                             style="padding:48px;color:var(--abu);font-style:italic;">
                             Belum ada transaksi untuk kegiatan ini.<br>
-                            <a href="{{ route('pengeluaran.sub.create', [$slug, urlencode($subKategori)]) }}"
+                            <a href="{{ route('pengeluaran.sub.create', [$slug, $sub->id]) }}"
                                style="color:var(--hijau-mid);text-decoration:none;font-weight:500;font-style:normal;">
                                 + Tambah sekarang
                             </a>

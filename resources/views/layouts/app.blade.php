@@ -82,7 +82,25 @@
             <a href="{{ route('pengeluaran.kategori', 'pembelian-pupuk') }}"
                class="nav-sub-link {{ request()->routeIs('pengeluaran.*') && request()->route('slug') === 'pembelian-pupuk' ? 'active' : '' }}">
                 <span class="sub-dot"></span>
-                Pembelian Pupuk
+                Pembelian Pupuk & Racun
+            </a>
+
+            <a href="{{ route('pengeluaran.kategori', 'pemakaian-alat-berat') }}"
+               class="nav-sub-link {{ request()->routeIs('pengeluaran.*') && request()->route('slug') === 'pemakaian-alat-berat' ? 'active' : '' }}">
+                <span class="sub-dot"></span>
+                Pemakaian Alat Berat
+            </a>
+
+            <a href="{{ route('pengeluaran.kategori', 'perlengkapan') }}"
+               class="nav-sub-link {{ request()->routeIs('pengeluaran.*') && request()->route('slug') === 'perlengkapan' ? 'active' : '' }}">
+                <span class="sub-dot"></span>
+                Perlengkapan
+            </a>
+
+            <a href="{{ route('pengeluaran.kategori', 'insentive') }}"
+               class="nav-sub-link {{ request()->routeIs('pengeluaran.*') && request()->route('slug') === 'insentive' ? 'active' : '' }}">
+                <span class="sub-dot"></span>
+                Insentive
             </a>
 
             <a href="{{ route('pengeluaran.kategori', 'biaya-umum') }}"

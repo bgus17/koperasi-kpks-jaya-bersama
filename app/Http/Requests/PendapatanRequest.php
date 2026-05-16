@@ -10,6 +10,28 @@ class PendapatanRequest extends FormRequest
     {
         return true;
     }
+
+    protected function prepareForValidation(): void
+    {
+        $kategori = trim((string) $this->input('kategori'));
+        $tanggal = (string) $this->input('tanggal');
+        $timestamp = $tanggal !== '' ? strtotime($tanggal) : false;
+        $tahun = $this->input('tahun') ?: ($timestamp ? date('Y', $timestamp) : now()->year);
+
+        $this->merge([
+            'nomor_kategori' => $this->filled('nomor_kategori')
+                ? trim((string) $this->input('nomor_kategori'))
+                : 'I',
+            'kategori' => $kategori,
+            'sub_kategori' => $this->filled('sub_kategori')
+                ? trim((string) $this->input('sub_kategori'))
+                : $kategori,
+            'debet' => $this->cleanMoney($this->input('debet')),
+            'kredit' => $this->cleanMoney($this->input('kredit')),
+            'saldo' => $this->cleanMoney($this->input('saldo')),
+            'tahun' => (int) $tahun,
+        ]);
+    }
  
     public function rules(): array
     {
@@ -41,5 +63,10 @@ class PendapatanRequest extends FormRequest
             'tanggal.required'        => 'Tanggal wajib diisi.',
             'tanggal.date'            => 'Format tanggal tidak valid.',
         ];
+    }
+
+    private function cleanMoney(mixed $value): int
+    {
+        return (int) preg_replace('/\D/', '', (string) $value);
     }
 }

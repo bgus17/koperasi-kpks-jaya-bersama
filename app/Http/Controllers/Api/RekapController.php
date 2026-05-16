@@ -7,9 +7,9 @@ use App\Http\Resources\RekapResource;
 use App\Models\Rekap;
 use App\Models\Pendapatan;
 use App\Models\Pengeluaran;
+use App\Services\KeuanganLedgerService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
 
 class RekapController extends Controller
 {
@@ -43,13 +43,8 @@ class RekapController extends Controller
             ->get();
 
         // Ringkasan pengeluaran per kategori
-        $pengeluaranSummary = DB::table('pengeluaran')
-            ->whereYear('tanggal', $tahun)
-            ->join('kategori_pengeluaran as kp', 'pengeluaran.kategori_id', '=', 'kp.id')
-            ->selectRaw('kp.nomor_kategori, kp.nama_kategori as kategori, SUM(pengeluaran.jumlah) as total_jumlah')
-            ->groupBy('kp.nomor_kategori', 'kp.nama_kategori')
-            ->orderBy('kp.nomor_kategori')
-            ->get();
+        $pengeluaranSummary = KeuanganLedgerService::pengeluaranPerKategori($tahun);
+        $ledgerSummary = KeuanganLedgerService::summary($tahun);
 
         return response()->json([
             'success' => true,
@@ -57,6 +52,7 @@ class RekapController extends Controller
                 'rekap'              => new RekapResource($rekap),
                 'pendapatan_summary' => $pendapatanSummary,
                 'pengeluaran_summary'=> $pengeluaranSummary,
+                'ledger_summary'     => $ledgerSummary,
             ],
         ]);
     }
@@ -90,6 +86,7 @@ class RekapController extends Controller
             'success' => true,
             'tahun'   => $tahun,
             'rekap'   => $rekap ? new RekapResource($rekap) : null,
+            'ledger_summary' => KeuanganLedgerService::summary((int) $tahun),
             'pendapatan'  => $pendapatan,
             'pengeluaran' => $pengeluaran,
         ]);

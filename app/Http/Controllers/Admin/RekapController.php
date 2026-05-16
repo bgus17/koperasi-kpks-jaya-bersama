@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Rekap;
 use App\Models\Pendapatan;
 use App\Models\Pengeluaran;
+use App\Services\KeuanganLedgerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -20,6 +21,7 @@ class RekapController extends Controller
 
         // Rekap grand total dari tabel rekap
         $rekap = Rekap::where('tahun', $tahun)->first();
+        $ledgerSummary = KeuanganLedgerService::summary((int) $tahun);
 
         // Ringkasan pendapatan per kategori
         $pendapatanPerKategori = Pendapatan::where('tahun', $tahun)
@@ -32,15 +34,7 @@ class RekapController extends Controller
             ->get();
 
         // Ringkasan pengeluaran per kategori
-        $pengeluaranPerKategori = DB::table('pengeluaran')
-            ->whereYear('tanggal', $tahun)
-            ->join('kategori_pengeluaran as kp', 'pengeluaran.kategori_id', '=', 'kp.id')
-            ->select('kp.nomor_kategori', 'kp.nama_kategori as kategori',
-                DB::raw('SUM(jumlah) as total_jumlah')
-            )
-            ->groupBy('kp.nomor_kategori', 'kp.nama_kategori')
-            ->orderBy('kp.nomor_kategori')
-            ->get();
+        $pengeluaranPerKategori = KeuanganLedgerService::pengeluaranPerKategori((int) $tahun);
 
         // Semua data pendapatan detail untuk tabel lengkap
         $pendapatanDetail = Pendapatan::where('tahun', $tahun)
@@ -60,7 +54,7 @@ class RekapController extends Controller
             ->get();
 
         // Daftar tahun yang tersedia
-        $tahunList = Rekap::select('tahun')->orderBy('tahun', 'desc')->pluck('tahun');
+        $tahunList = KeuanganLedgerService::tahunList();
 
         return view('rekap.index', compact(
             'rekap',
@@ -69,7 +63,8 @@ class RekapController extends Controller
             'pendapatanPerKategori',
             'pengeluaranPerKategori',
             'pendapatanDetail',
-            'pengeluaranDetail'
+            'pengeluaranDetail',
+            'ledgerSummary'
         ));
     }
 
@@ -155,20 +150,15 @@ class RekapController extends Controller
     {
         $tahun = $request->input('tahun', now()->year);
 
-        $totalDebet  = Pendapatan::where('tahun', $tahun)->sum('debet');
-        $totalKredit = Pendapatan::where('tahun', $tahun)->sum('kredit');
-        $totalBiaya  = Pengeluaran::whereYear('tanggal', $tahun)->sum('jumlah');
-
-        $grandTotalKredit = $totalKredit + $totalBiaya;
-        $saldoAkhir       = $totalDebet - $grandTotalKredit;
+        $ledgerSummary = KeuanganLedgerService::summary((int) $tahun);
 
         Rekap::updateOrCreate(
             ['tahun' => $tahun],
             [
                 'tanggal_tutup'      => now()->setYear($tahun)->endOfYear()->toDateString(),
-                'grand_total_debet'  => $totalDebet,
-                'grand_total_kredit' => $grandTotalKredit,
-                'saldo_akhir'        => max(0, $saldoAkhir),
+                'grand_total_debet'  => $ledgerSummary['total_debet'],
+                'grand_total_kredit' => $ledgerSummary['total_kredit'],
+                'saldo_akhir'        => max(0, $ledgerSummary['saldo_akhir']),
             ]
         );
 

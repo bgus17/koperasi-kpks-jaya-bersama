@@ -13,12 +13,21 @@ class Pengeluaran extends Model
 {
     protected $table = 'pengeluaran';
 
+    public const JENIS_TRANSAKSI = [
+        'debet' => 'Debet',
+        'kredit' => 'Kredit',
+        'saldo' => 'Saldo',
+    ];
+
     public const DETAIL_RELATIONS = [
         'angkutan'  => 'angkutanDetail',
         'panen'     => 'panenDetail',
         'berondol'  => 'kutipBerondolDetail',
         'perawatan' => 'perawatanDetail',
         'pupuk'     => 'pupukDetail',
+        'alat_berat' => 'alatBeratDetail',
+        'perlengkapan' => 'perlengkapanDetail',
+        'insentive' => 'insentiveDetail',
         'umum'      => 'umumDetail',
     ];
 
@@ -27,12 +36,19 @@ class Pengeluaran extends Model
         'sub_id',
         'tanggal',
         'jumlah',
+        'jenis_transaksi',
+        'debet',
+        'kredit',
+        'saldo',
         'keterangan',
         'sudah_bayar',
     ];
 
     protected $casts = [
         'jumlah'          => 'integer',
+        'debet'           => 'integer',
+        'kredit'          => 'integer',
+        'saldo'           => 'integer',
         'tanggal'         => 'date',
         'sudah_bayar'     => 'boolean',
     ];
@@ -56,6 +72,7 @@ class Pengeluaran extends Model
         'harga_satuan',
         'supplier_vendor',
         'no_referensi',
+        'jenis_transaksi_label',
     ];
 
     // ── Relationships ─────────────────────────────────────
@@ -93,6 +110,21 @@ class Pengeluaran extends Model
     public function pupukDetail()
     {
         return $this->hasOne(PengeluaranPupuk::class, 'pengeluaran_id');
+    }
+
+    public function alatBeratDetail()
+    {
+        return $this->hasOne(PengeluaranAlatBerat::class, 'pengeluaran_id');
+    }
+
+    public function perlengkapanDetail()
+    {
+        return $this->hasOne(PengeluaranPerlengkapan::class, 'pengeluaran_id');
+    }
+
+    public function insentiveDetail()
+    {
+        return $this->hasOne(PengeluaranInsentive::class, 'pengeluaran_id');
     }
 
     public function umumDetail()
@@ -229,6 +261,11 @@ class Pengeluaran extends Model
         return $value ?? $this->stringDetailValue('no_referensi');
     }
 
+    public function getJenisTransaksiLabelAttribute(): string
+    {
+        return self::JENIS_TRANSAKSI[$this->jenis_transaksi ?? 'kredit'] ?? 'Kredit';
+    }
+
     public function getMandorKaryawanAttribute(): ?Karyawan
     {
         $detail = $this->activeDetailModel();
@@ -251,7 +288,7 @@ class Pengeluaran extends Model
 
     public static function detailRelations(): array
     {
-        return array_values(self::DETAIL_RELATIONS);
+        return array_values(array_unique(self::DETAIL_RELATIONS));
     }
 
     public static function detailRelationForProfile(string $profile): string
@@ -281,6 +318,18 @@ class Pengeluaran extends Model
 
         if ($categoryNumber === 'IV' || str_contains($name, 'pupuk')) {
             return 'pupuk';
+        }
+
+        if ($categoryNumber === 'VI' || str_contains($name, 'traktor') || str_contains($name, 'grader') || str_contains($name, 'compactor')) {
+            return 'alat_berat';
+        }
+
+        if ($categoryNumber === 'VII') {
+            return 'perlengkapan';
+        }
+
+        if ($categoryNumber === 'VIII') {
+            return 'insentive';
         }
 
         return 'umum';

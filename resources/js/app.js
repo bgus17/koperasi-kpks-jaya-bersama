@@ -165,10 +165,28 @@ const activityProfiles = {
         defaultSatuan: 'HK',
     },
     pupuk: {
-        title: 'Pembelian / Distribusi Pupuk',
-        volumeLabel: 'Jumlah Pupuk',
-        note: 'Gunakan sak, kg, liter, atau ton sesuai bukti pembelian/distribusi.',
+        title: 'Pembelian / Distribusi Pupuk & Racun',
+        volumeLabel: 'Jumlah Pupuk/Racun',
+        note: 'Gunakan sak, kg, liter, atau ton sesuai bukti pembelian/distribusi pupuk atau racun.',
         defaultSatuan: 'sak',
+    },
+    alat_berat: {
+        title: 'Pemakaian Alat Berat',
+        volumeLabel: 'Jam Kerja / HM',
+        note: 'Catat HM/jam kerja alat, lokasi blok, vendor atau operator, dan biaya per jam atau rit sesuai pekerjaan kebun.',
+        defaultSatuan: 'HM',
+    },
+    perlengkapan: {
+        title: 'Perlengkapan Operasional Kebun',
+        volumeLabel: 'Jumlah Perlengkapan',
+        note: 'Catat jumlah unit, set, meter, atau paket barang, supplier, nota, dan lokasi penggunaan perlengkapan kebun.',
+        defaultSatuan: 'unit',
+    },
+    insentive: {
+        title: 'Insentive Operasional',
+        volumeLabel: 'Jumlah Penerima',
+        note: 'Catat periode, penerima atau kelompok penerima, jumlah orang, dan nilai insentive sesuai peran di kebun.',
+        defaultSatuan: 'orang',
     },
 };
 
@@ -182,6 +200,9 @@ function resolveActivityProfile(subName = '', categoryNumber = '', detailType = 
     if (name.includes('berondol')) return 'berondol';
     if (categoryNumber === 'III') return 'perawatan';
     if (categoryNumber === 'IV' || name.includes('pupuk')) return 'pupuk';
+    if (categoryNumber === 'VI' || name.includes('traktor') || name.includes('grader') || name.includes('compactor')) return 'alat_berat';
+    if (categoryNumber === 'VII') return 'perlengkapan';
+    if (categoryNumber === 'VIII') return 'insentive';
 
     return 'umum';
 }

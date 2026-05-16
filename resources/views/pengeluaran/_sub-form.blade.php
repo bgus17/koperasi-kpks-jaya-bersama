@@ -18,6 +18,13 @@
     $selectedKategoriId = (string) old('kategori_id', $kategori?->id ?? $p?->kategori_id ?? '');
     $selectedSubId = (string) old('sub_id', $sub?->id ?? $p?->sub_id ?? '');
     $selectedSatuan = old('satuan', $p?->satuan ?? $formContext['defaultSatuan'] ?? '');
+    $selectedJenisTransaksi = old('jenis_transaksi', $p?->jenis_transaksi ?? 'kredit');
+    $jenisTransaksiOptions = [
+        'kredit' => 'Kredit - pengeluaran keluar',
+        'debet' => 'Debet - pengembalian dana',
+        'saldo' => 'Saldo - penyesuaian keluar',
+    ];
+    $satuanOptions = ['kg', 'ton', 'janjang', 'HK', 'ha', 'liter', 'sak', 'rit', 'HM', 'jam', 'unit', 'pcs', 'set', 'meter', 'batang', 'roll', 'paket', 'orang', 'bulan', 'hari'];
     $mandorOtomatis = trim((string) (auth()->user()?->name ?? old('mandor', $p?->mandor ?? '')));
 
     $oldPekerja = old('pekerja');
@@ -144,7 +151,7 @@
                 @error('mandor')<span class="form-error">{{ $message }}</span>@enderror
             </div>
 
-            <div class="form-group activity-field" data-profiles="panen angkutan berondol perawatan pupuk">
+            <div class="form-group activity-field" data-profiles="panen angkutan berondol perawatan pupuk alat_berat perlengkapan">
                 <label for="blok">Blok / Afdeling / Lokasi</label>
                 <input type="text" id="blok" name="blok"
                        value="{{ old('blok', $p?->blok) }}"
@@ -192,15 +199,15 @@
                 @error('brondolan_kg')<span class="form-error">{{ $message }}</span>@enderror
             </div>
 
-            <div class="form-group activity-field" data-profiles="angkutan pupuk umum">
-                <label for="supplier_vendor">Vendor / Sopir / Supplier</label>
+            <div class="form-group activity-field" data-profiles="angkutan pupuk alat_berat perlengkapan insentive umum">
+                <label for="supplier_vendor">Penerima / Vendor / Sopir / Supplier</label>
                 <input type="text" id="supplier_vendor" name="supplier_vendor"
                        value="{{ old('supplier_vendor', $p?->supplier_vendor) }}"
-                       placeholder="Nama vendor, sopir, atau toko">
+                       placeholder="Nama penerima, vendor, sopir, atau toko">
                 @error('supplier_vendor')<span class="form-error">{{ $message }}</span>@enderror
             </div>
 
-            <div class="form-group activity-field" data-profiles="angkutan pupuk umum">
+            <div class="form-group activity-field" data-profiles="angkutan pupuk alat_berat perlengkapan insentive umum">
                 <label for="no_referensi">No. SPB / Nota / Referensi</label>
                 <input type="text" id="no_referensi" name="no_referensi"
                        value="{{ old('no_referensi', $p?->no_referensi) }}"
@@ -281,7 +288,7 @@
                             <label>Satuan</label>
                             <select name="{{ $baseName }}[satuan]" data-worker-satuan>
                                 <option value="">-</option>
-                                @foreach(['kg', 'ton', 'janjang', 'HK', 'ha', 'liter', 'sak', 'rit', 'unit', 'hari'] as $satuan)
+                                @foreach($satuanOptions as $satuan)
                                     <option value="{{ $satuan }}" {{ $workerValue($karyawan->id, 'satuan') === $satuan ? 'selected' : '' }}>{{ $satuan }}</option>
                                 @endforeach
                             </select>
@@ -329,7 +336,7 @@
                 <label for="satuan">Satuan</label>
                 <select id="satuan" name="satuan" data-satuan-select>
                     <option value="">Pilih satuan</option>
-                    @foreach(['kg', 'ton', 'janjang', 'HK', 'ha', 'liter', 'sak', 'rit', 'unit', 'hari'] as $satuan)
+                    @foreach($satuanOptions as $satuan)
                         <option value="{{ $satuan }}" {{ $selectedSatuan === $satuan ? 'selected' : '' }}>{{ $satuan }}</option>
                     @endforeach
                 </select>
@@ -343,6 +350,19 @@
                        value="{{ old('harga_satuan', $p?->harga_satuan) }}"
                        placeholder="0">
                 @error('harga_satuan')<span class="form-error">{{ $message }}</span>@enderror
+            </div>
+
+            <div class="form-group">
+                <label for="jenis_transaksi">Jenis Transaksi Kas *</label>
+                <select id="jenis_transaksi" name="jenis_transaksi" required>
+                    @foreach($jenisTransaksiOptions as $value => $label)
+                        <option value="{{ $value }}" {{ $selectedJenisTransaksi === $value ? 'selected' : '' }}>
+                            {{ $label }}
+                        </option>
+                    @endforeach
+                </select>
+                <small class="field-note">Nilai debet, kredit, dan saldo dihitung otomatis dari jumlah biaya.</small>
+                @error('jenis_transaksi')<span class="form-error">{{ $message }}</span>@enderror
             </div>
 
             <div class="form-group">

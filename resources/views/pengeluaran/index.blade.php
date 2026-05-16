@@ -47,18 +47,36 @@
 
 {{-- RINGKASAN --}}
 @php
-    $totalJumlah = $pengeluaran->sum('jumlah');
+    $summary = $pengeluaranSummary ?? [
+        'jumlah' => $pengeluaran->sum('jumlah'),
+        'debet' => $pengeluaran->sum('debet'),
+        'kredit' => $pengeluaran->sum('kredit'),
+        'saldo' => $pengeluaran->sum('saldo'),
+        'record' => $pengeluaran->total(),
+    ];
 @endphp
 
 <div class="stats-grid" style="margin-bottom:20px;">
     <div class="stat-card">
-        <div class="stat-label">Total Pengeluaran (halaman)</div>
-        <div class="stat-value kredit rp">Rp {{ number_format($totalJumlah, 0, ',', '.') }}</div>
+        <div class="stat-label">Total Kredit Pengeluaran</div>
+        <div class="stat-value kredit rp">Rp {{ number_format($summary['kredit'], 0, ',', '.') }}</div>
         <div class="stat-icon">📤</div>
     </div>
     <div class="stat-card">
+        <div class="stat-label">Total Debet Pengeluaran</div>
+        <div class="stat-value rp">Rp {{ number_format($summary['debet'], 0, ',', '.') }}</div>
+        <div class="stat-icon">📥</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Mutasi Saldo</div>
+        <div class="stat-value {{ $summary['saldo'] < 0 ? 'kredit' : 'saldo' }} rp">
+            Rp {{ number_format($summary['saldo'], 0, ',', '.') }}
+        </div>
+        <div class="stat-icon">💰</div>
+    </div>
+    <div class="stat-card">
         <div class="stat-label">Jumlah Record</div>
-        <div class="stat-value">{{ $pengeluaran->total() }}</div>
+        <div class="stat-value">{{ $summary['record'] }}</div>
         <div class="stat-icon">📋</div>
     </div>
 </div>
@@ -79,6 +97,7 @@
                     <th>Lapangan</th>
                     <th>Output</th>
                     <th class="text-right">Jumlah (Rp)</th>
+                    <th>Transaksi Kas</th>
                     <th class="text-center">Status</th>
                     <th class="text-center">Tahun</th>
                     <th class="text-center">Tanggal</th>
@@ -121,6 +140,20 @@
                         <td class="text-right rp {{ $row->jumlah > 0 ? 'rp-kredit' : '' }}">
                             {{ $row->jumlah > 0 ? number_format($row->jumlah, 0, ',', '.') : '—' }}
                         </td>
+                        <td style="font-size:12px;color:var(--abu);white-space:nowrap;">
+                            <span class="badge-status" style="background:var(--krem);color:var(--hijau);">
+                                {{ $row->jenis_transaksi_label }}
+                            </span>
+                            <div class="rp {{ $row->debet > 0 ? 'rp-debet' : '' }}">
+                                Debet: {{ $row->debet > 0 ? number_format($row->debet, 0, ',', '.') : '—' }}
+                            </div>
+                            <div class="rp {{ $row->kredit > 0 ? 'rp-kredit' : '' }}">
+                                Kredit: {{ $row->kredit > 0 ? number_format($row->kredit, 0, ',', '.') : '—' }}
+                            </div>
+                            <div class="rp {{ $row->saldo < 0 ? 'rp-kredit' : 'rp-saldo' }}">
+                                Saldo: {{ $row->saldo > 0 ? '+' : '' }}{{ number_format($row->saldo, 0, ',', '.') }}
+                            </div>
+                        </td>
                         <td class="text-center">
                             <span class="badge-status {{ $row->sudah_bayar ? 'status-paid' : 'status-unpaid' }}">
                                 {{ $row->sudah_bayar ? 'Lunas' : 'Belum' }}
@@ -141,7 +174,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="10" class="text-center" style="padding:40px;color:var(--abu);font-style:italic;">
+                        <td colspan="11" class="text-center" style="padding:40px;color:var(--abu);font-style:italic;">
                             Tidak ada data pengeluaran ditemukan.
                         </td>
                     </tr>

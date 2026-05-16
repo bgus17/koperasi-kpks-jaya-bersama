@@ -11,7 +11,7 @@
     <span>›</span>
     <a href="{{ route('pengeluaran.kategori', $slug) }}">{{ $kat['nama'] }}</a>
     <span>›</span>
-    <a href="{{ route('pengeluaran.sub.index', [$slug, urlencode($subKategori)]) }}">{{ $subKategori }}</a>
+    <a href="{{ route('pengeluaran.sub.index', [$slug, $sub->id]) }}">{{ $subKategori }}</a>
     <span>›</span>
     <span>Tambah</span>
 </div>
@@ -24,13 +24,13 @@
         </div>
         <p>{{ $subKategori }} — {{ $kat['nama'] }}</p>
     </div>
-    <a href="{{ route('pengeluaran.sub.index', [$slug, urlencode($subKategori)]) }}"
+    <a href="{{ route('pengeluaran.sub.index', [$slug, $sub->id]) }}"
        class="btn btn-outline">← Kembali</a>
 </div>
 
 <div class="card" style="max-width:1100px;">
     <div class="card-body" style="padding:28px;">
-        <form method="POST" action="{{ route('pengeluaran.sub.store', [$slug, urlencode($subKategori)]) }}">
+        <form method="POST" action="{{ route('pengeluaran.sub.store', [$slug, $sub->id]) }}">
             @csrf
             @include('pengeluaran._sub-form', [
                 'p' => null,
@@ -41,7 +41,7 @@
             ])
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">Simpan</button>
-                <a href="{{ route('pengeluaran.sub.index', [$slug, urlencode($subKategori)]) }}"
+                <a href="{{ route('pengeluaran.sub.index', [$slug, $sub->id]) }}"
                    class="btn btn-outline">Batal</a>
             </div>
         </form>

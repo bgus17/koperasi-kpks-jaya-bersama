@@ -9,7 +9,7 @@
 <div class="page-header">
     <div>
         <h2>Dana Kebun (Pendapatan)</h2>
-        <p>Catatan debet, kredit, dan saldo per kategori tahun buku.</p>
+        <p>Catatan debet, kredit, dan saldo yang sudah membaca mutasi pengeluaran.</p>
     </div>
     <a href="{{ route('pendapatan.create') }}" class="btn btn-primary">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
@@ -54,22 +54,27 @@
 {{-- RINGKASAN --}}
 <div class="stats-grid" style="margin-bottom:20px;">
     <div class="stat-card">
-        <div class="stat-label">Total Debet (Semua Data)</div>
+        <div class="stat-label">Total Debet Terintegrasi ({{ $summaryLabel }})</div>
         <div class="stat-value rp">Rp {{ number_format($totalDebetAll, 0, ',', '.') }}</div>
         <div class="stat-icon">📈</div>
     </div>
     <div class="stat-card">
-        <div class="stat-label">Total Kredit (Semua Data)</div>
+        <div class="stat-label">Total Kredit Terintegrasi ({{ $summaryLabel }})</div>
         <div class="stat-value kredit rp">Rp {{ number_format($totalKreditAll, 0, ',', '.') }}</div>
         <div class="stat-icon">📉</div>
     </div>
     <div class="stat-card">
-        <div class="stat-label">Total Saldo (Semua Data)</div>
-        <div class="stat-value saldo rp">Rp {{ number_format($totalSaldoAll, 0, ',', '.') }}</div>
+        <div class="stat-label">Saldo Akhir Terintegrasi ({{ $summaryLabel }})</div>
+        <div class="stat-value {{ $totalSaldoAll < 0 ? 'kredit' : 'saldo' }} rp">Rp {{ number_format($totalSaldoAll, 0, ',', '.') }}</div>
         <div class="stat-icon">💰</div>
     </div>
     <div class="stat-card">
-        <div class="stat-label">Jumlah Record (Database)</div>
+        <div class="stat-label">Kredit Dari Pengeluaran</div>
+        <div class="stat-value kredit rp">Rp {{ number_format($ledgerSummary['pengeluaran_kredit'], 0, ',', '.') }}</div>
+        <div class="stat-icon">📤</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Jumlah Record Terintegrasi</div>
         <div class="stat-value">{{ $jumlahRecordAll }}</div>
         <div class="stat-icon">📋</div>
     </div>

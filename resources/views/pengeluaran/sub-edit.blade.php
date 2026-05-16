@@ -11,7 +11,7 @@
     <span>›</span>
     <a href="{{ route('pengeluaran.kategori', $slug) }}">{{ $kat['nama'] }}</a>
     <span>›</span>
-    <a href="{{ route('pengeluaran.sub.index', [$slug, urlencode($subKategori)]) }}">{{ $subKategori }}</a>
+    <a href="{{ route('pengeluaran.sub.index', [$slug, $sub->id]) }}">{{ $subKategori }}</a>
     <span>›</span>
     <span>Edit</span>
 </div>
@@ -24,7 +24,7 @@
         </div>
         <p>{{ $subKategori }} — {{ $kat['nama'] }}</p>
     </div>
-    <a href="{{ route('pengeluaran.sub.index', [$slug, urlencode($subKategori)]) }}"
+    <a href="{{ route('pengeluaran.sub.index', [$slug, $sub->id]) }}"
        class="btn btn-outline">← Kembali</a>
 </div>
 
@@ -32,7 +32,7 @@
     <div class="card-body" style="padding:28px;">
 
         <form method="POST"
-              action="{{ route('pengeluaran.sub.update', [$slug, urlencode($subKategori), $pengeluaran]) }}"
+              action="{{ route('pengeluaran.sub.update', [$slug, $sub->id, $pengeluaran]) }}"
               id="form-edit">
             @csrf @method('PUT')
             @include('pengeluaran._sub-form', [
@@ -44,7 +44,7 @@
             ])
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
-                <a href="{{ route('pengeluaran.sub.index', [$slug, urlencode($subKategori)]) }}"
+                <a href="{{ route('pengeluaran.sub.index', [$slug, $sub->id]) }}"
                    class="btn btn-outline">Batal</a>
                 <button type="button"
                         onclick="document.getElementById('form-hapus-sub').submit()"
@@ -56,7 +56,7 @@
 
         <form id="form-hapus-sub"
               method="POST"
-              action="{{ route('pengeluaran.sub.destroy', [$slug, urlencode($subKategori), $pengeluaran]) }}"
+              action="{{ route('pengeluaran.sub.destroy', [$slug, $sub->id, $pengeluaran]) }}"
               onsubmit="return confirm('Yakin ingin menghapus transaksi ini?')"
               style="display:none;">
             @csrf @method('DELETE')

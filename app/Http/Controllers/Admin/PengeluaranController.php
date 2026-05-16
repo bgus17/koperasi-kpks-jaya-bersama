@@ -17,6 +17,9 @@ class PengeluaranController extends Controller
         'biaya-produksi'  => 'II',
         'biaya-perawatan' => 'III',
         'pembelian-pupuk' => 'IV',
+        'pemakaian-alat-berat' => 'VI',
+        'perlengkapan' => 'VII',
+        'insentive' => 'VIII',
         'biaya-umum'      => 'V',
     ];
 
@@ -36,6 +39,15 @@ class PengeluaranController extends Controller
             $this->applySearch($query, $request->search);
         }
 
+        $summaryQuery = clone $query;
+        $pengeluaranSummary = [
+            'jumlah' => (int) (clone $summaryQuery)->sum('jumlah'),
+            'debet' => (int) (clone $summaryQuery)->sum('debet'),
+            'kredit' => (int) (clone $summaryQuery)->sum('kredit'),
+            'saldo' => (int) (clone $summaryQuery)->sum('saldo'),
+            'record' => (int) (clone $summaryQuery)->count(),
+        ];
+
         $pengeluaran = $query->orderBy('tanggal', 'desc')
             ->orderBy('id', 'desc')
             ->paginate(20)
@@ -48,7 +60,7 @@ class PengeluaranController extends Controller
 
         $kategoriList = KategoriPengeluaran::orderBy('nomor_kategori')->get();
 
-        return view('pengeluaran.index', compact('pengeluaran', 'tahunList', 'kategoriList'));
+        return view('pengeluaran.index', compact('pengeluaran', 'tahunList', 'kategoriList', 'pengeluaranSummary'));
     }
 
     public function create()
@@ -115,16 +127,18 @@ class PengeluaranController extends Controller
 
         $subList = $kategori->subPengeluaran()
             ->orderBy('nomor_sub')
-            ->pluck('nama_sub');
+            ->get(['id', 'nama_sub']);
 
         $totals = Pengeluaran::with('sub')
             ->where('kategori_id', $kategori->id)
-            ->selectRaw('sub_id, SUM(jumlah) as total, COUNT(*) as jml_transaksi, MAX(tanggal) as transaksi_terakhir')
+            ->selectRaw('sub_id, SUM(jumlah) as total, SUM(debet) as total_debet, SUM(kredit) as total_kredit, SUM(saldo) as total_saldo, COUNT(*) as jml_transaksi, MAX(tanggal) as transaksi_terakhir')
             ->groupBy('sub_id')
             ->get()
-            ->keyBy(fn ($row) => $row->sub?->nama_sub);
+            ->keyBy('sub_id');
 
-        $totalKategori  = $totals->sum('total');
+        $totalKategori  = $totals->sum('total_kredit');
+        $totalDebetKategori = $totals->sum('total_debet');
+        $totalMutasiSaldo = $totals->sum('total_saldo');
         $totalTransaksi = $totals->sum('jml_transaksi');
 
         return view('pengeluaran.kategori', compact(
@@ -133,6 +147,8 @@ class PengeluaranController extends Controller
             'subList',
             'totals',
             'totalKategori',
+            'totalDebetKategori',
+            'totalMutasiSaldo',
             'totalTransaksi'
         ));
     }
@@ -167,6 +183,9 @@ class PengeluaranController extends Controller
         }
 
         $totalAll = (clone $query)->sum('jumlah');
+        $totalDebet = (clone $query)->sum('debet');
+        $totalKredit = (clone $query)->sum('kredit');
+        $totalSaldo = (clone $query)->sum('saldo');
         $summaryRows = (clone $query)->get();
         $totalVolume = $summaryRows->sum(fn ($row) => (float) $row->volume);
         $totalTonase = $summaryRows->sum(fn ($row) => (float) $row->tonase_kg);
@@ -205,6 +224,9 @@ class PengeluaranController extends Controller
             'sub',
             'pengeluaran',
             'totalAll',
+            'totalDebet',
+            'totalKredit',
+            'totalSaldo',
             'totalVolume',
             'totalTonase',
             'totalLuas',
@@ -242,7 +264,7 @@ class PengeluaranController extends Controller
         });
 
         return redirect()
-            ->route('pengeluaran.sub.index', [$slug, urlencode($sub->nama_sub)])
+            ->route('pengeluaran.sub.index', [$slug, $sub->id])
             ->with('success', 'Data transaksi lapangan berhasil ditambahkan.');
     }
 
@@ -277,7 +299,7 @@ class PengeluaranController extends Controller
         });
 
         return redirect()
-            ->route('pengeluaran.sub.index', [$slug, urlencode($sub->nama_sub)])
+            ->route('pengeluaran.sub.index', [$slug, $sub->id])
             ->with('success', 'Data transaksi lapangan berhasil diperbarui.');
     }
 
@@ -290,7 +312,7 @@ class PengeluaranController extends Controller
         $pengeluaran->delete();
 
         return redirect()
-            ->route('pengeluaran.sub.index', [$slug, urlencode($sub->nama_sub)])
+            ->route('pengeluaran.sub.index', [$slug, $sub->id])
             ->with('success', 'Data transaksi lapangan berhasil dihapus.');
     }
 
@@ -338,6 +360,9 @@ class PengeluaranController extends Controller
             'kutipBerondolDetail' => ['blok', 'mandor'],
             'perawatanDetail' => ['blok', 'mandor'],
             'pupukDetail' => ['blok', 'supplier_vendor', 'no_referensi'],
+            'alatBeratDetail' => ['blok', 'supplier_vendor', 'no_referensi'],
+            'perlengkapanDetail' => ['blok', 'supplier_vendor', 'no_referensi'],
+            'insentiveDetail' => ['supplier_vendor', 'no_referensi'],
             'umumDetail' => ['supplier_vendor', 'no_referensi'],
         ];
     }
@@ -419,6 +444,12 @@ class PengeluaranController extends Controller
 
     private function subFromRoute(KategoriPengeluaran $kategori, string $subKategori): SubPengeluaran
     {
+        if (ctype_digit($subKategori)) {
+            return SubPengeluaran::where('kategori_id', $kategori->id)
+                ->whereKey((int) $subKategori)
+                ->firstOrFail();
+        }
+
         return SubPengeluaran::where('kategori_id', $kategori->id)
             ->where('nama_sub', urldecode($subKategori))
             ->firstOrFail();
@@ -461,10 +492,25 @@ class PengeluaranController extends Controller
             $metricHint = 'Catat kilogram brondolan, jumlah pekerja, blok, dan tarif kutip.';
             $defaultSatuan = 'kg';
         } elseif ($profile === 'pupuk') {
-            $title = 'Pembelian / Distribusi Pupuk';
-            $metricLabel = 'Jumlah Pupuk';
-            $metricHint = 'Gunakan sak, kg, liter, atau ton sesuai bukti pembelian/distribusi.';
+            $title = 'Pembelian / Distribusi Pupuk & Racun';
+            $metricLabel = 'Jumlah Pupuk/Racun';
+            $metricHint = 'Gunakan sak, kg, liter, atau ton sesuai bukti pembelian/distribusi pupuk atau racun.';
             $defaultSatuan = 'sak';
+        } elseif ($profile === 'alat_berat') {
+            $title = 'Pemakaian Alat Berat';
+            $metricLabel = 'Jam Kerja / HM';
+            $metricHint = 'Catat HM/jam kerja alat, lokasi blok, vendor atau operator, dan biaya per jam atau rit sesuai pekerjaan kebun.';
+            $defaultSatuan = 'HM';
+        } elseif ($profile === 'perlengkapan') {
+            $title = 'Perlengkapan Operasional Kebun';
+            $metricLabel = 'Jumlah Perlengkapan';
+            $metricHint = 'Catat jumlah unit, set, meter, atau paket barang, supplier, nota, dan lokasi penggunaan perlengkapan kebun.';
+            $defaultSatuan = 'unit';
+        } elseif ($profile === 'insentive') {
+            $title = 'Insentive Operasional';
+            $metricLabel = 'Jumlah Penerima';
+            $metricHint = 'Catat periode, penerima atau kelompok penerima, jumlah orang, dan nilai insentive sesuai peran di kebun.';
+            $defaultSatuan = 'orang';
         } elseif ($profile === 'perawatan') {
             $title = 'Aktivitas Perawatan';
             $metricLabel = 'HK / Luas Kerja';
