@@ -37,7 +37,8 @@ class PendapatanController extends Controller
         // Hitung total dari SEMUA data di database (tanpa filter)
         $totalDebetAll = Pendapatan::sum('debet');
         $totalKreditAll = Pendapatan::sum('kredit');
-        $totalSaldoAll = Pendapatan::latest('id')->first()?->saldo ?? 0;
+        $totalSaldoAll = Pendapatan::sum('saldo');
+        $jumlahRecordAll = Pendapatan::count();
 
         $pendapatan = $query->orderBy('nomor_kategori')->orderBy('id')->paginate(20)->withQueryString();
 
@@ -46,7 +47,7 @@ class PendapatanController extends Controller
         // Hanya tampilkan 3 kategori yang diizinkan di filter
         $kategoriList = collect($this->allowedCategories);
 
-        return view('pendapatan.index', compact('pendapatan', 'tahunList', 'kategoriList', 'totalDebetAll', 'totalKreditAll', 'totalSaldoAll'));
+        return view('pendapatan.index', compact('pendapatan', 'tahunList', 'kategoriList', 'totalDebetAll', 'totalKreditAll', 'totalSaldoAll', 'jumlahRecordAll'));
     }
 
     public function create()

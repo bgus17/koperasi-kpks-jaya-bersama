@@ -37,6 +37,11 @@ class PengeluaranRequest extends FormRequest
             $subId = $subQuery->value('id');
         }
 
+        $this->merge([
+            'kategori_id' => $kategoriId,
+            'sub_id' => $subId,
+        ]);
+
         $workerDetails = $this->normalizeWorkerDetails();
         $workerTotals = $this->calculateWorkerTotals($workerDetails);
 
@@ -51,12 +56,7 @@ class PengeluaranRequest extends FormRequest
             $jumlah = (int) round($volume * $hargaSatuan);
         }
 
-        $mandorId = $this->nullableInteger('mandor_id');
-        $mandorNama = $this->nullableTrimmed('mandor');
-
-        if ($mandorId) {
-            $mandorNama = Karyawan::where('id', $mandorId)->value('nama') ?: $mandorNama;
-        }
+        [$mandorId, $mandorNama] = $this->automaticMandorSnapshot();
 
         $this->workerDetails = $workerDetails;
 
@@ -136,12 +136,8 @@ class PengeluaranRequest extends FormRequest
                 $validator->errors()->add('mandor_id', 'Mandor harus dipilih dari karyawan aktif.');
             }
 
-            if ($this->needsMandor() && !$this->filled('mandor_id')) {
-                $validator->errors()->add('mandor_id', 'Mandor wajib dipilih untuk aktivitas panen dan perawatan.');
-            }
-
             if ($this->needsWorkerDetails() && empty($this->workerDetails)) {
-                $validator->errors()->add('pekerja', 'Pilih minimal satu pekerja untuk aktivitas panen dan perawatan.');
+                $validator->errors()->add('pekerja', 'Pilih minimal satu pekerja untuk aktivitas panen, berondol, dan perawatan.');
             }
 
             $workerIds = collect($this->workerDetails)->pluck('karyawan_id')->all();
@@ -327,14 +323,43 @@ class PengeluaranRequest extends FormRequest
         return $details;
     }
 
-    private function needsMandor(): bool
-    {
-        return $this->needsWorkerDetails();
-    }
-
     private function needsWorkerDetails(): bool
     {
         return in_array($this->detailProfile(), ['panen', 'berondol', 'perawatan'], true);
+    }
+
+    private function automaticMandorSnapshot(): array
+    {
+        if (!$this->needsWorkerDetails()) {
+            return [null, null];
+        }
+
+        $user = $this->user();
+        $mandorNama = $this->nullableStringFrom($user?->name, 100);
+
+        if (!$mandorNama) {
+            $mandorId = $this->nullableInteger('mandor_id');
+            $mandorNama = $this->nullableTrimmed('mandor');
+
+            if ($mandorId) {
+                $mandorNama = Karyawan::where('id', $mandorId)->value('nama') ?: $mandorNama;
+            }
+
+            return [$mandorId, $mandorNama];
+        }
+
+        $mandorId = null;
+        $userKaryawanId = (int) ($user?->karyawan_id ?? 0);
+
+        if ($userKaryawanId > 0 && Karyawan::aktif()->whereKey($userKaryawanId)->exists()) {
+            $mandorId = $userKaryawanId;
+        }
+
+        if (!$mandorId) {
+            $mandorId = Karyawan::aktif()->where('nama', $mandorNama)->value('id');
+        }
+
+        return [$mandorId ? (int) $mandorId : null, $mandorNama];
     }
 
     private function calculateWorkerTotals(array $details): array

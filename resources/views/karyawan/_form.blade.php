@@ -1,5 +1,5 @@
 {{-- FILE: resources/views/karyawan/_form.blade.php --}}
-{{-- Kolom aktif: nama, jenis_kelamin, no_hp, alamat, status, gaji_pokok, keterangan --}}
+{{-- Kolom aktif: nama, jenis_kelamin, no_hp, alamat, tanggal_masuk, status, keterangan --}}
 
 @if($errors->any())
     <div style="background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;
@@ -58,18 +58,12 @@
         @error('status')<span class="form-error">{{ $message }}</span>@enderror
     </div>
 
-    {{-- Gaji Pokok — preview dihandle app.js via #gajiInput → #gajiPreview --}}
+    {{-- Tanggal Masuk --}}
     <div class="form-group">
-        <label>Gaji Pokok (Rp)</label>
-        <div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-weight:600;color:var(--abu);">Rp</span>
-            <input type="number" name="gaji_pokok" id="gajiInput"
-                   value="{{ old('gaji_pokok', $k?->gaji_pokok ?? '') }}"
-                   min="0" step="1000" placeholder="0">
-        </div>
-        <div id="gajiPreview"
-             style="font-size:12px;color:var(--hijau-mid);margin-top:4px;font-weight:500;"></div>
-        @error('gaji_pokok')<span class="form-error">{{ $message }}</span>@enderror
+        <label>Tanggal Masuk Kerja</label>
+        <input type="date" name="tanggal_masuk"
+               value="{{ old('tanggal_masuk', $k?->tanggal_masuk?->format('Y-m-d')) }}">
+        @error('tanggal_masuk')<span class="form-error">{{ $message }}</span>@enderror
     </div>
 
     {{-- Alamat --}}

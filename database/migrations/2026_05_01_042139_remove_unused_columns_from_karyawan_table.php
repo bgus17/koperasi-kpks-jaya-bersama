@@ -11,18 +11,36 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('karyawan', function (Blueprint $table) {
-            $table->dropColumn(['nik', 'jabatan', 'divisi', 'tanggal_masuk']);
-        });
+        $columns = collect(['nik', 'jabatan', 'divisi', 'gaji_pokok'])
+            ->filter(fn ($column) => Schema::hasColumn('karyawan', $column))
+            ->values()
+            ->all();
+
+        if (!empty($columns)) {
+            Schema::table('karyawan', function (Blueprint $table) use ($columns) {
+                $table->dropColumn($columns);
+            });
+        }
     }
 
     public function down(): void
     {
         Schema::table('karyawan', function (Blueprint $table) {
-            $table->string('nik')->nullable();
-            $table->string('jabatan')->nullable();
-            $table->string('divisi')->nullable();
-            $table->date('tanggal_masuk')->nullable();
+            if (!Schema::hasColumn('karyawan', 'nik')) {
+                $table->string('nik')->nullable();
+            }
+
+            if (!Schema::hasColumn('karyawan', 'jabatan')) {
+                $table->string('jabatan')->nullable();
+            }
+
+            if (!Schema::hasColumn('karyawan', 'divisi')) {
+                $table->string('divisi')->nullable();
+            }
+
+            if (!Schema::hasColumn('karyawan', 'gaji_pokok')) {
+                $table->decimal('gaji_pokok', 15, 2)->default(0);
+            }
         });
     }
 };

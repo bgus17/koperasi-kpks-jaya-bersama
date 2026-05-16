@@ -16,14 +16,13 @@ class Karyawan extends Model
         'jenis_kelamin',
         'no_hp',
         'alamat',
+        'tanggal_masuk',
         'status',
-        'gaji_pokok',   // ← ditambahkan
         'keterangan',
-        // kolom dihapus via migration: nik, jabatan, divisi, tanggal_masuk
     ];
 
     protected $casts = [
-        'gaji_pokok' => 'integer',  // ← cast angka, bukan date lagi
+        'tanggal_masuk' => 'date',
     ];
 
     // ── SCOPES ────────────────────────────────────────────────────────────────
@@ -91,19 +90,6 @@ class Karyawan extends Model
             'cuti'     => 'cuti',
             default    => 'nonaktif',
         };
-    }
-
-    /**
-     * Gaji pokok dalam format Rupiah untuk ditampilkan di view.
-     * Contoh: "Rp 2.500.000"
-     */
-    public function getGajiPokokFormatAttribute(): string
-    {
-        if (!$this->gaji_pokok) {
-            return '—';
-        }
-
-        return 'Rp ' . number_format($this->gaji_pokok, 0, ',', '.');
     }
 
     // ── STATIC HELPERS ────────────────────────────────────────────────────────

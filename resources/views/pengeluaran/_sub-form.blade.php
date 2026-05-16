@@ -18,7 +18,7 @@
     $selectedKategoriId = (string) old('kategori_id', $kategori?->id ?? $p?->kategori_id ?? '');
     $selectedSubId = (string) old('sub_id', $sub?->id ?? $p?->sub_id ?? '');
     $selectedSatuan = old('satuan', $p?->satuan ?? $formContext['defaultSatuan'] ?? '');
-    $selectedMandorId = (string) old('mandor_id', $p?->mandor_id ?? '');
+    $mandorOtomatis = trim((string) (auth()->user()?->name ?? old('mandor', $p?->mandor ?? '')));
 
     $oldPekerja = old('pekerja');
     $oldPekerja = is_array($oldPekerja) ? $oldPekerja : null;
@@ -135,20 +135,13 @@
         <div class="form-section-title" data-profile-title>{{ $formContext['title'] }}</div>
         <div class="form-hint" data-profile-note>{{ $formContext['metricHint'] }}</div>
 
-        <input type="hidden" name="mandor" value="{{ old('mandor', $p?->mandor) }}">
+        <input type="hidden" name="mandor" value="{{ $mandorOtomatis }}">
 
         <div class="form-grid">
             <div class="form-group activity-field" data-profiles="panen berondol perawatan">
-                <label for="mandor_id">Mandor / Pengawas Lapangan <span style="color:red">*</span></label>
-                <select id="mandor_id" name="mandor_id">
-                    <option value="">Pilih mandor dari data karyawan</option>
-                    @foreach($karyawanAktif as $karyawan)
-                        <option value="{{ $karyawan->id }}" {{ $selectedMandorId === (string) $karyawan->id ? 'selected' : '' }}>
-                            {{ $karyawan->nama }}{{ $karyawan->status !== 'aktif' ? ' (non-aktif)' : '' }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('mandor_id')<span class="form-error">{{ $message }}</span>@enderror
+                <label>Mandor / Pengawas Lapangan</label>
+                <div class="readonly-field">{{ $mandorOtomatis ?: 'Mengikuti akun login' }}</div>
+                @error('mandor')<span class="form-error">{{ $message }}</span>@enderror
             </div>
 
             <div class="form-group activity-field" data-profiles="panen angkutan berondol perawatan pupuk">

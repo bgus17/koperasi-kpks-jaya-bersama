@@ -48,4 +48,4 @@ Route::group(['middleware' => ['auth']], function () {
     Route::resource('karyawan', KaryawanController::class);
     
 });
- 
+

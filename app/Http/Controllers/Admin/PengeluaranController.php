@@ -349,8 +349,6 @@ class PengeluaranController extends Controller
         if ($pengeluaran) {
             $includeIds = $pengeluaran->pekerjaDetail->pluck('karyawan_id')
                 ->filter()
-                ->push($pengeluaran->mandor_id)
-                ->filter()
                 ->unique()
                 ->values();
         }
@@ -460,7 +458,7 @@ class PengeluaranController extends Controller
         } elseif ($profile === 'berondol') {
             $title = 'Kutip Berondol';
             $metricLabel = 'Berondolan Terkutip';
-            $metricHint = 'Catat kilogram brondolan, jumlah pekerja, blok, mandor, dan tarif kutip.';
+            $metricHint = 'Catat kilogram brondolan, jumlah pekerja, blok, dan tarif kutip.';
             $defaultSatuan = 'kg';
         } elseif ($profile === 'pupuk') {
             $title = 'Pembelian / Distribusi Pupuk';
@@ -470,7 +468,7 @@ class PengeluaranController extends Controller
         } elseif ($profile === 'perawatan') {
             $title = 'Aktivitas Perawatan';
             $metricLabel = 'HK / Luas Kerja';
-            $metricHint = 'Catat hektar, HK, pekerja, blok, mandor, dan tarif pekerjaan perawatan.';
+            $metricHint = 'Catat hektar, HK, pekerja, blok, dan tarif pekerjaan perawatan.';
             $defaultSatuan = 'HK';
         }
 

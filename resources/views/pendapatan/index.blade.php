@@ -64,13 +64,13 @@
         <div class="stat-icon">📉</div>
     </div>
     <div class="stat-card">
-        <div class="stat-label">Total Saldo (Database)</div>
+        <div class="stat-label">Total Saldo (Semua Data)</div>
         <div class="stat-value saldo rp">Rp {{ number_format($totalSaldoAll, 0, ',', '.') }}</div>
         <div class="stat-icon">💰</div>
     </div>
     <div class="stat-card">
-        <div class="stat-label">Jumlah Record</div>
-        <div class="stat-value">{{ $pendapatan->total() }}</div>
+        <div class="stat-label">Jumlah Record (Database)</div>
+        <div class="stat-value">{{ $jumlahRecordAll }}</div>
         <div class="stat-icon">📋</div>
     </div>
 </div>
