@@ -1,0 +1,37 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class SanitizeInput
+{
+    /**
+     * Kolom yang TIDAK perlu di-trim (misal: password)
+     */
+    protected array $except = ['password', 'password_confirmation'];
+
+    public function handle(Request $request, Closure $next): Response
+    {
+        $input = $request->except($this->except);
+        $input = $this->clean($input);
+        $request->merge($input);
+
+        return $next($request);
+    }
+
+    private function clean(array $data): array
+    {
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $data[$key] = $this->clean($value);
+            } elseif (is_string($value)) {
+                $data[$key] = trim(strip_tags($value));
+            }
+        }
+
+        return $data;
+    }
+}

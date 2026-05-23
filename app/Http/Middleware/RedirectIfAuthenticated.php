@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Providers\RouteServiceProvider;
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +13,10 @@ class RedirectIfAuthenticated
     /**
      * Handle an incoming request.
      *
+     * Jika user sudah login, redirect ke dashboard sesuai role.
+     * - Admin        → admin panel (pendapatan)
+     * - Mandor/Staff → user portal SPA
+     *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle(Request $request, Closure $next, string ...$guards): Response
@@ -21,7 +25,17 @@ class RedirectIfAuthenticated
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
-                return redirect(RouteServiceProvider::HOME);
+                $user = Auth::guard($guard)->user();
+
+                if ($user->hasEffectiveRole(User::ROLE_ADMIN)) {
+                    return redirect()->route('pendapatan.index');
+                }
+
+                if ($user->hasEffectiveRole([User::ROLE_MANDOR, User::ROLE_STAFF_OPERATOR])) {
+                    return redirect('/user/#/dashboard');
+                }
+
+                return redirect()->route('gateway');
             }
         }
 

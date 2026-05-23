@@ -233,14 +233,48 @@ input.is-invalid { border-color: var(--merah); }
 
 .btn-login:active { transform: translateY(0); }
 
+/* ── ALT LOGIN LINK ── */
+.login-alt {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--krem-drk);
+    text-align: center;
+}
+
+.login-alt p {
+    font-size: 13px;
+    color: var(--abu);
+}
+
+.login-alt a {
+    color: var(--hijau);
+    font-weight: 500;
+    text-decoration: none;
+    transition: color .2s;
+}
+
+.login-alt a:hover {
+    color: var(--hijau-mid);
+    text-decoration: underline;
+}
+
 /* ── FOOTER ── */
 .login-footer {
-    margin-top: 28px;
-    padding-top: 20px;
-    border-top: 1px solid var(--krem-drk);
+    margin-top: 16px;
+    padding-top: 16px;
     font-size: 12px;
     color: var(--abu);
     text-align: center;
+}
+
+.login-footer a {
+    color: var(--abu);
+    text-decoration: none;
+    transition: color .2s;
+}
+
+.login-footer a:hover {
+    color: var(--hijau);
 }
 
 /* ── RESPONSIVE ── */

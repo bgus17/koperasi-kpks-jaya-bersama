@@ -13,9 +13,8 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
 </head>
-<body>
+<body class="admin-panel">
 
-{{-- SIDEBAR --}}
 <aside class="sidebar">
     <div class="sidebar-brand">
         <div class="logo-icon">🌿</div>
@@ -43,8 +42,6 @@
             </svg>
             Dana Kebun (Pendapatan)
         </a>
-
-        {{-- ── PENGELUARAN DROPDOWN ── --}}
 
         <button class="nav-link nav-dropdown-toggle {{ $isPengeluaran ? 'active' : '' }}"
                 id="toggle-pengeluaran"
@@ -109,7 +106,6 @@
                 Biaya Umum
             </a>
         </div>
-        {{-- ── END DROPDOWN ── --}}
 
         <div class="nav-label">SDM</div>
 
@@ -129,7 +125,7 @@
             <div class="user-avatar">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</div>
             <div>
                 <div class="user-name">{{ Auth::user()->name }}</div>
-                <div class="user-role">Administrator</div>
+                <div class="user-role">{{ Auth::user()->role_label }}</div>
             </div>
         </div>
         <form method="POST" action="{{ route('logout') }}">
@@ -144,7 +140,6 @@
     </div>
 </aside>
 
-{{-- MAIN --}}
 <div class="main-wrap">
     <header class="topbar">
         <div class="topbar-title">@yield('page-title', 'Dashboard')</div>
@@ -170,10 +165,6 @@
     </main>
 </div>
 
-{{--
-    Kirim daftar dropdown yang harus terbuka ke app.js
-    via window.activeDropdowns — tidak ada PHP logic di JS.
---}}
 <script>
     window.activeDropdowns = {!! json_encode($isPengeluaran ? ['drop-pengeluaran'] : []) !!};
 </script>

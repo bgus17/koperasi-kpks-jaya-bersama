@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login — Koperasi Cahaya Mulya</title>
+    <title>Admin Login — Koperasi Cahaya Mulya</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&display=swap" rel="stylesheet">
     @vite(['resources/css/login.css'])
@@ -14,8 +14,8 @@
     <div class="brand-logo">🌿</div>
     <h1 class="brand-name">Koperasi<br><em>Cahaya Mulya</em></h1>
     <p class="brand-desc">
-        Sistem informasi keuangan terintegrasi untuk pengelolaan dana kebun,
-        pendapatan, dan pengeluaran koperasi kelapa sawit.
+        Panel administrasi untuk mengelola pendapatan, pengeluaran,
+        data karyawan, dan rekap keuangan koperasi kelapa sawit.
     </p>
     <div class="brand-stats">
         <div class="bstat">
@@ -35,11 +35,11 @@
 
 <div class="login-panel">
     <div class="login-header">
-        <h2>Masuk ke Sistem</h2>
-        <p>Gunakan akun yang telah diberikan oleh administrator.</p>
+        <h2>Admin Panel</h2>
+        <p>Masuk dengan akun administrator untuk mengelola sistem.</p>
     </div>
 
-    <form method="POST" action="{{ route('login.post') }}">
+    <form method="POST" action="{{ route('admin.login.post') }}" id="admin-login-form">
         @csrf
 
         <div class="form-group">
@@ -80,11 +80,15 @@
             <label for="remember">Ingat saya di perangkat ini</label>
         </div>
 
-        <button type="submit" class="btn-login">Masuk →</button>
+        <button type="submit" class="btn-login" id="btn-admin-login">Masuk sebagai Admin →</button>
     </form>
 
+    <div class="login-alt">
+        <p>Bukan administrator? <a href="/user/#/login" id="link-user-portal">Masuk ke Portal User →</a></p>
+    </div>
+
     <div class="login-footer">
-        Koperasi Cahaya Mulya &copy; {{ date('Y') }} &mdash; Sistem Keuangan Internal
+        <a href="{{ route('gateway') }}" id="link-back-gateway">← Kembali ke halaman utama</a>
     </div>
 </div>
 

@@ -1,25 +1,45 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\PendapatanController;
 use App\Http\Controllers\Admin\PengeluaranController;
 use App\Http\Controllers\Admin\RekapController;
 use App\Http\Controllers\Admin\KaryawanController;
- 
-// ── Auth ──────────────────────────────────────────────────────
-Route::get('/', fn() => redirect()->route('pendapatan.index'));
- 
-Route::get('/login',  [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.post');
-Route::post('/logout',[AuthController::class, 'logout'])->name('logout')->middleware('auth');
- 
-// ── Admin (semua wajib login) ──────────────────────────────────
-Route::group(['middleware' => ['auth']], function () {
- 
+use Illuminate\Support\Facades\Route;
+
+// ── Gateway (Landing Page) ────────────────────────────────────
+Route::get('/', [AuthController::class, 'gateway'])->name('gateway');
+
+// ── Admin Auth (custom — override Breeze login) ──────────────
+Route::get('/admin/login', [AuthController::class, 'showLogin'])
+    ->middleware('guest')
+    ->name('admin.login');
+
+Route::post('/admin/login', [AuthController::class, 'login'])
+    ->name('admin.login.post');
+
+Route::post('/admin/logout', [AuthController::class, 'logout'])
+    ->name('admin.logout')
+    ->middleware('auth');
+
+Route::get('/dashboard', fn () => redirect()->route('pendapatan.index'))
+    ->middleware(['auth', 'role:admin'])
+    ->name('dashboard');
+
+// ── Profile (Breeze) ─────────────────────────────────────────
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+// ── Admin Panel (semua wajib login + role:admin) ──────────────
+Route::group(['middleware' => ['auth', 'role:admin']], function () {
+
     // Pendapatan
     Route::resource('pendapatan', PendapatanController::class);
- 
+
     // Pengeluaran (CRUD)
     Route::resource('pengeluaran', PengeluaranController::class);
 
@@ -43,9 +63,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::put('rekap/{rekap}',        [RekapController::class, 'update'])->name('rekap.update');
     Route::delete('rekap/{rekap}',     [RekapController::class, 'destroy'])->name('rekap.destroy');
     Route::post('rekap/hitung',        [RekapController::class, 'hitung'])->name('rekap.hitung');
-
-    // Karyawan
-    Route::resource('karyawan', KaryawanController::class);
-    
 });
 
+// ── Breeze Auth Routes (login, forgot password, profile auth) ──
+require __DIR__.'/auth.php';

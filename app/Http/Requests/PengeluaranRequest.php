@@ -6,6 +6,7 @@ use App\Models\KategoriPengeluaran;
 use App\Models\Karyawan;
 use App\Models\Pengeluaran;
 use App\Models\SubPengeluaran;
+use App\Services\ActorAccessService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -21,12 +22,32 @@ class PengeluaranRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $kategoriId = $this->input('kategori_id');
+        if (!$kategoriId && $this->route('slug')) {
+            $nomorKategori = ActorAccessService::categoryNumberForSlug((string) $this->route('slug'));
+
+            if ($nomorKategori) {
+                $kategoriId = KategoriPengeluaran::where('nomor_kategori', $nomorKategori)->value('id');
+            }
+        }
+
         if (!$kategoriId && $this->filled('nomor_kategori')) {
             $kategoriId = KategoriPengeluaran::where('nomor_kategori', trim((string) $this->input('nomor_kategori')))
                 ->value('id');
         }
 
         $subId = $this->input('sub_id');
+        $routeSubKategori = $this->route('subKategori');
+
+        if (!$subId && $routeSubKategori && $kategoriId) {
+            $subQuery = SubPengeluaran::where('kategori_id', $kategoriId);
+
+            if (ctype_digit((string) $routeSubKategori)) {
+                $subId = (clone $subQuery)->whereKey((int) $routeSubKategori)->value('id');
+            } else {
+                $subId = (clone $subQuery)->where('nama_sub', urldecode((string) $routeSubKategori))->value('id');
+            }
+        }
+
         if (!$subId && $this->filled('sub_kategori')) {
             $subQuery = SubPengeluaran::where('nama_sub', trim((string) $this->input('sub_kategori')));
 
