@@ -1,12 +1,7 @@
 <?php
 
-// ============================================================
-// FILE: app/Models/Pengeluaran.php
-// ============================================================
-
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model as EloquentModel;
 use Illuminate\Database\Eloquent\Model;
 
 class Pengeluaran extends Model
@@ -20,15 +15,15 @@ class Pengeluaran extends Model
     ];
 
     public const DETAIL_RELATIONS = [
-        'angkutan'  => 'angkutanDetail',
-        'panen'     => 'panenDetail',
-        'berondol'  => 'kutipBerondolDetail',
+        'angkutan' => 'angkutanDetail',
+        'panen' => 'panenDetail',
+        'berondol' => 'kutipBerondolDetail',
         'perawatan' => 'perawatanDetail',
-        'pupuk'     => 'pupukDetail',
+        'pupuk' => 'pupukDetail',
         'alat_berat' => 'alatBeratDetail',
         'perlengkapan' => 'perlengkapanDetail',
         'insentive' => 'insentiveDetail',
-        'umum'      => 'umumDetail',
+        'umum' => 'umumDetail',
     ];
 
     protected $fillable = [
@@ -45,12 +40,12 @@ class Pengeluaran extends Model
     ];
 
     protected $casts = [
-        'jumlah'          => 'integer',
-        'debet'           => 'integer',
-        'kredit'          => 'integer',
-        'saldo'           => 'integer',
-        'tanggal'         => 'date',
-        'sudah_bayar'     => 'boolean',
+        'jumlah' => 'integer',
+        'debet' => 'integer',
+        'kredit' => 'integer',
+        'saldo' => 'integer',
+        'tanggal' => 'date',
+        'sudah_bayar' => 'boolean',
     ];
 
     protected $appends = [
@@ -335,7 +330,7 @@ class Pengeluaran extends Model
         return 'umum';
     }
 
-    private function activeDetailModel(): ?EloquentModel
+    private function activeDetailModel(): ?Model
     {
         $relation = self::detailRelationForProfile($this->detailProfile());
 
@@ -354,7 +349,7 @@ class Pengeluaran extends Model
             return $kategori instanceof KategoriPengeluaran ? $kategori : null;
         }
 
-        if (!array_key_exists('kategori_id', $this->attributes) || $this->attributes['kategori_id'] === null) {
+        if (! array_key_exists('kategori_id', $this->attributes) || $this->attributes['kategori_id'] === null) {
             return null;
         }
 
@@ -369,7 +364,7 @@ class Pengeluaran extends Model
             return $sub instanceof SubPengeluaran ? $sub : null;
         }
 
-        if (!array_key_exists('sub_id', $this->attributes) || $this->attributes['sub_id'] === null) {
+        if (! array_key_exists('sub_id', $this->attributes) || $this->attributes['sub_id'] === null) {
             return null;
         }
 

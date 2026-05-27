@@ -4,17 +4,18 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PengeluaranRequest;
-use App\Models\KategoriPengeluaran;
 use App\Models\Karyawan;
-use App\Models\Pengeluaran;
+use App\Models\KategoriPengeluaran;
 use App\Models\SubPengeluaran;
 use App\Services\ActorAccessService;
+use App\Services\PengeluaranService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class ActorFormController extends Controller
 {
+    public function __construct(private PengeluaranService $pengeluaranService) {}
+
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -87,18 +88,16 @@ class ActorFormController extends Controller
 
         abort_if((int) $validated['kategori_id'] !== $kategori->id || (int) $validated['sub_id'] !== $sub->id, 422);
 
-        $pengeluaran = null;
-
-        DB::transaction(function () use ($request, $validated, &$pengeluaran) {
-            $pengeluaran = Pengeluaran::create($validated);
-            $this->syncDetail($pengeluaran, $request->detailData());
-            $this->syncPekerja($pengeluaran, $request->workerDetails());
-        });
+        $pengeluaran = $this->pengeluaranService->create(
+            $validated,
+            $request->detailData(),
+            $request->workerDetails()
+        );
 
         return response()->json([
             'success' => true,
             'message' => 'Data transaksi berhasil disimpan.',
-            'data' => $pengeluaran->load(array_merge(['kategori', 'sub', 'pekerjaDetail'], Pengeluaran::detailRelations())),
+            'data' => $pengeluaran->load($this->pengeluaranService->relations()),
         ], 201);
     }
 
@@ -106,8 +105,8 @@ class ActorFormController extends Controller
     {
         $menu = ActorAccessService::menuForSlug($slug);
 
-        abort_if(!$menu, 404, 'Menu tidak ditemukan.');
-        abort_if(!ActorAccessService::canAccess($request->user(), $slug), 403, 'Aktor tidak memiliki akses ke menu ini.');
+        abort_if(! $menu, 404, 'Menu tidak ditemukan.');
+        abort_if(! ActorAccessService::canAccess($request->user(), $slug), 403, 'Aktor tidak memiliki akses ke menu ini.');
 
         if ($requiredType !== null) {
             abort_if($menu['type'] !== $requiredType, 404, 'Menu ini tidak memiliki form transaksi.');
@@ -141,48 +140,5 @@ class ActorFormController extends Controller
             ],
             default => [],
         };
-    }
-
-    private function syncDetail(Pengeluaran $pengeluaran, array $detailData): void
-    {
-        $pengeluaran->loadMissing(['kategori', 'sub']);
-
-        $activeRelation = Pengeluaran::detailRelationForProfile($pengeluaran->detailProfile());
-
-        foreach (Pengeluaran::detailRelations() as $relation) {
-            if ($relation !== $activeRelation) {
-                $pengeluaran->{$relation}()->delete();
-            }
-        }
-
-        $pengeluaran->{$activeRelation}()->updateOrCreate(
-            ['pengeluaran_id' => $pengeluaran->id],
-            $detailData
-        );
-    }
-
-    private function syncPekerja(Pengeluaran $pengeluaran, array $details): void
-    {
-        $pengeluaran->pekerjaDetail()->delete();
-
-        if (empty($details)) {
-            return;
-        }
-
-        $karyawan = Karyawan::whereIn('id', collect($details)->pluck('karyawan_id'))
-            ->get()
-            ->keyBy('id');
-
-        foreach ($details as $detail) {
-            $worker = $karyawan->get($detail['karyawan_id']);
-
-            if (!$worker) {
-                continue;
-            }
-
-            $pengeluaran->pekerjaDetail()->create(array_merge($detail, [
-                'nama_karyawan_snapshot' => $worker->nama,
-            ]));
-        }
     }
 }

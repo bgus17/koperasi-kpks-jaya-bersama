@@ -5,27 +5,19 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PengeluaranRequest;
 use App\Models\KategoriPengeluaran;
-use App\Models\Karyawan;
 use App\Models\Pengeluaran;
 use App\Models\SubPengeluaran;
+use App\Services\ActorAccessService;
+use App\Services\PengeluaranService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class PengeluaranController extends Controller
 {
-    private array $kategoriSlug = [
-        'biaya-produksi'  => 'II',
-        'biaya-perawatan' => 'III',
-        'pembelian-pupuk' => 'IV',
-        'pemakaian-alat-berat' => 'VI',
-        'perlengkapan' => 'VII',
-        'insentive' => 'VIII',
-        'biaya-umum'      => 'V',
-    ];
+    public function __construct(private PengeluaranService $pengeluaranService) {}
 
     public function index(Request $request)
     {
-        $query = Pengeluaran::with($this->pengeluaranRelations());
+        $query = Pengeluaran::with($this->pengeluaranService->relations());
 
         if ($request->filled('tahun')) {
             $query->whereYear('tanggal', $request->tahun);
@@ -36,7 +28,7 @@ class PengeluaranController extends Controller
         }
 
         if ($request->filled('search')) {
-            $this->applySearch($query, $request->search);
+            $this->pengeluaranService->applySearch($query, $request->search);
         }
 
         $summaryQuery = clone $query;
@@ -67,18 +59,18 @@ class PengeluaranController extends Controller
     {
         $kategoriList = $this->kategoriListWithSub();
         $formContext = $this->activityFormContext();
-        $karyawanAktif = $this->karyawanAktif();
+        $karyawanAktif = $this->pengeluaranService->activeWorkers();
 
         return view('pengeluaran.create', compact('kategoriList', 'formContext', 'karyawanAktif'));
     }
 
     public function store(PengeluaranRequest $request)
     {
-        DB::transaction(function () use ($request) {
-            $pengeluaran = Pengeluaran::create($request->pengeluaranData());
-            $this->syncDetail($pengeluaran, $request->detailData());
-            $this->syncPekerja($pengeluaran, $request->workerDetails());
-        });
+        $this->pengeluaranService->create(
+            $request->pengeluaranData(),
+            $request->detailData(),
+            $request->workerDetails()
+        );
 
         return redirect()->route('pengeluaran.index')
             ->with('success', 'Data pengeluaran berhasil ditambahkan.');
@@ -91,22 +83,23 @@ class PengeluaranController extends Controller
 
     public function edit(Pengeluaran $pengeluaran)
     {
-        $pengeluaran->load($this->pengeluaranRelations(['pekerjaDetail.karyawan']));
+        $pengeluaran->load($this->pengeluaranService->relations(['pekerjaDetail.karyawan']));
 
         $kategoriList = $this->kategoriListWithSub();
         $formContext = $this->activityFormContext($pengeluaran->sub?->nama_sub, $pengeluaran->kategori, $pengeluaran->sub?->jenis_detail);
-        $karyawanAktif = $this->karyawanAktif($pengeluaran);
+        $karyawanAktif = $this->pengeluaranService->activeWorkers($pengeluaran);
 
         return view('pengeluaran.edit', compact('pengeluaran', 'kategoriList', 'formContext', 'karyawanAktif'));
     }
 
     public function update(PengeluaranRequest $request, Pengeluaran $pengeluaran)
     {
-        DB::transaction(function () use ($request, $pengeluaran) {
-            $pengeluaran->update($request->pengeluaranData());
-            $this->syncDetail($pengeluaran, $request->detailData());
-            $this->syncPekerja($pengeluaran, $request->workerDetails());
-        });
+        $this->pengeluaranService->update(
+            $pengeluaran,
+            $request->pengeluaranData(),
+            $request->detailData(),
+            $request->workerDetails()
+        );
 
         return redirect()->route('pengeluaran.index')
             ->with('success', 'Data pengeluaran berhasil diperbarui.');
@@ -136,7 +129,7 @@ class PengeluaranController extends Controller
             ->get()
             ->keyBy('sub_id');
 
-        $totalKategori  = $totals->sum('total_kredit');
+        $totalKategori = $totals->sum('total_kredit');
         $totalDebetKategori = $totals->sum('total_debet');
         $totalMutasiSaldo = $totals->sum('total_saldo');
         $totalTransaksi = $totals->sum('jml_transaksi');
@@ -160,7 +153,7 @@ class PengeluaranController extends Controller
         $kat = $this->kategoriViewData($kategori);
         $subKategori = $sub->nama_sub;
 
-        $query = Pengeluaran::with($this->pengeluaranRelations(['pekerjaDetail.karyawan']))
+        $query = Pengeluaran::with($this->pengeluaranService->relations(['pekerjaDetail.karyawan']))
             ->where('kategori_id', $kategori->id)
             ->where('sub_id', $sub->id)
             ->orderBy('tanggal', 'desc')
@@ -244,7 +237,7 @@ class PengeluaranController extends Controller
         $kat = $this->kategoriViewData($kategori);
         $subKategori = $sub->nama_sub;
         $formContext = $this->activityFormContext($sub->nama_sub, $kategori, $sub->jenis_detail);
-        $karyawanAktif = $this->karyawanAktif();
+        $karyawanAktif = $this->pengeluaranService->activeWorkers();
 
         return view('pengeluaran.sub-create', compact('slug', 'kat', 'subKategori', 'kategori', 'sub', 'formContext', 'karyawanAktif'));
     }
@@ -257,11 +250,11 @@ class PengeluaranController extends Controller
 
         abort_if((int) $validated['kategori_id'] !== $kategori->id || (int) $validated['sub_id'] !== $sub->id, 422);
 
-        DB::transaction(function () use ($request, $validated) {
-            $pengeluaran = Pengeluaran::create($validated);
-            $this->syncDetail($pengeluaran, $request->detailData());
-            $this->syncPekerja($pengeluaran, $request->workerDetails());
-        });
+        $this->pengeluaranService->create(
+            $validated,
+            $request->detailData(),
+            $request->workerDetails()
+        );
 
         return redirect()
             ->route('pengeluaran.sub.index', [$slug, $sub->id])
@@ -276,9 +269,9 @@ class PengeluaranController extends Controller
 
         $kat = $this->kategoriViewData($kategori);
         $subKategori = $sub->nama_sub;
-        $pengeluaran->load($this->pengeluaranRelations(['pekerjaDetail.karyawan']));
+        $pengeluaran->load($this->pengeluaranService->relations(['pekerjaDetail.karyawan']));
         $formContext = $this->activityFormContext($sub->nama_sub, $kategori, $sub->jenis_detail);
-        $karyawanAktif = $this->karyawanAktif($pengeluaran);
+        $karyawanAktif = $this->pengeluaranService->activeWorkers($pengeluaran);
 
         return view('pengeluaran.sub-edit', compact('slug', 'kat', 'subKategori', 'kategori', 'sub', 'pengeluaran', 'formContext', 'karyawanAktif'));
     }
@@ -292,11 +285,12 @@ class PengeluaranController extends Controller
         $validated = $request->pengeluaranData();
         abort_if((int) $validated['kategori_id'] !== $kategori->id || (int) $validated['sub_id'] !== $sub->id, 422);
 
-        DB::transaction(function () use ($request, $pengeluaran, $validated) {
-            $pengeluaran->update($validated);
-            $this->syncDetail($pengeluaran, $request->detailData());
-            $this->syncPekerja($pengeluaran, $request->workerDetails());
-        });
+        $this->pengeluaranService->update(
+            $pengeluaran,
+            $validated,
+            $request->detailData(),
+            $request->workerDetails()
+        );
 
         return redirect()
             ->route('pengeluaran.sub.index', [$slug, $sub->id])
@@ -323,123 +317,13 @@ class PengeluaranController extends Controller
             ->get();
     }
 
-    private function pengeluaranRelations(array $extra = []): array
-    {
-        return array_values(array_unique(array_merge([
-            'kategori',
-            'sub',
-            'pekerjaDetail',
-        ], Pengeluaran::detailRelations(), $extra)));
-    }
-
-    private function applySearch($query, string $search): void
-    {
-        $query->where(function ($q) use ($search) {
-            $q->whereHas('sub', fn ($sub) => $sub->where('nama_sub', 'like', "%{$search}%"))
-                ->orWhereHas('kategori', fn ($kat) => $kat->where('nama_kategori', 'like', "%{$search}%"))
-                ->orWhereHas('pekerjaDetail', fn ($detail) => $detail->where('nama_karyawan_snapshot', 'like', "%{$search}%"))
-                ->orWhere('keterangan', 'like', "%{$search}%");
-
-            foreach ($this->detailSearchColumns() as $relation => $columns) {
-                $q->orWhereHas($relation, function ($detail) use ($columns, $search) {
-                    $detail->where(function ($detailQuery) use ($columns, $search) {
-                        foreach ($columns as $column) {
-                            $detailQuery->orWhere($column, 'like', "%{$search}%");
-                        }
-                    });
-                });
-            }
-        });
-    }
-
-    private function detailSearchColumns(): array
-    {
-        return [
-            'angkutanDetail' => ['blok', 'supplier_vendor', 'no_referensi'],
-            'panenDetail' => ['blok', 'mandor'],
-            'kutipBerondolDetail' => ['blok', 'mandor'],
-            'perawatanDetail' => ['blok', 'mandor'],
-            'pupukDetail' => ['blok', 'supplier_vendor', 'no_referensi'],
-            'alatBeratDetail' => ['blok', 'supplier_vendor', 'no_referensi'],
-            'perlengkapanDetail' => ['blok', 'supplier_vendor', 'no_referensi'],
-            'insentiveDetail' => ['supplier_vendor', 'no_referensi'],
-            'umumDetail' => ['supplier_vendor', 'no_referensi'],
-        ];
-    }
-
-    private function karyawanAktif(?Pengeluaran $pengeluaran = null)
-    {
-        $includeIds = collect();
-
-        if ($pengeluaran) {
-            $includeIds = $pengeluaran->pekerjaDetail->pluck('karyawan_id')
-                ->filter()
-                ->unique()
-                ->values();
-        }
-
-        return Karyawan::query()
-            ->where(function ($query) use ($includeIds) {
-                $query->where('status', 'aktif');
-
-                if ($includeIds->isNotEmpty()) {
-                    $query->orWhereIn('id', $includeIds);
-                }
-            })
-            ->orderBy('nama')
-            ->get();
-    }
-
-    private function syncPekerja(Pengeluaran $pengeluaran, array $details): void
-    {
-        $pengeluaran->pekerjaDetail()->delete();
-
-        if (empty($details)) {
-            return;
-        }
-
-        $karyawan = Karyawan::whereIn('id', collect($details)->pluck('karyawan_id'))
-            ->get()
-            ->keyBy('id');
-
-        foreach ($details as $detail) {
-            $worker = $karyawan->get($detail['karyawan_id']);
-
-            if (!$worker) {
-                continue;
-            }
-
-            $pengeluaran->pekerjaDetail()->create(array_merge($detail, [
-                'nama_karyawan_snapshot' => $worker->nama,
-            ]));
-        }
-    }
-
-    private function syncDetail(Pengeluaran $pengeluaran, array $detailData): void
-    {
-        $pengeluaran->loadMissing(['kategori', 'sub']);
-
-        $activeRelation = Pengeluaran::detailRelationForProfile($pengeluaran->detailProfile());
-
-        foreach (Pengeluaran::detailRelations() as $relation) {
-            if ($relation !== $activeRelation) {
-                $pengeluaran->{$relation}()->delete();
-            }
-        }
-
-        $pengeluaran->{$activeRelation}()->updateOrCreate(
-            ['pengeluaran_id' => $pengeluaran->id],
-            $detailData
-        );
-
-        $pengeluaran->unsetRelation($activeRelation);
-    }
-
     private function kategoriFromSlug(string $slug): KategoriPengeluaran
     {
-        abort_unless(isset($this->kategoriSlug[$slug]), 404);
+        $categoryNumber = ActorAccessService::categoryNumberForSlug($slug);
 
-        return KategoriPengeluaran::where('nomor_kategori', $this->kategoriSlug[$slug])->firstOrFail();
+        abort_unless($categoryNumber, 404);
+
+        return KategoriPengeluaran::where('nomor_kategori', $categoryNumber)->firstOrFail();
     }
 
     private function subFromRoute(KategoriPengeluaran $kategori, string $subKategori): SubPengeluaran

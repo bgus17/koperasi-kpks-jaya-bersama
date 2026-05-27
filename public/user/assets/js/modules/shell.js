@@ -1,5 +1,6 @@
 import { apiRequest } from '../core/http.js';
 import { escapeHtml } from '../core/dom.js';
+import { menuHref } from '../core/navigation.js';
 import { clearSession, getSession, updateSession } from '../core/session.js';
 import { navigate } from '../core/router.js';
 import { securityContext } from '../core/security.js';
@@ -41,7 +42,7 @@ export function renderShell(root, contentHtml, activeSlug = '') {
                 <div class="actor-card">
                     <strong>${escapeHtml(actor.name)}</strong>
                     <span>${escapeHtml(actor.role_label ?? actor.role)}</span>
-                    <button class="btn btn-outline" type="button" data-logout style="width:100%;margin-top:14px;">Logout</button>
+                    <button class="btn btn-outline btn-block actor-logout" type="button" data-logout>Logout</button>
                 </div>
             </aside>
             <main class="main">
@@ -53,7 +54,7 @@ export function renderShell(root, contentHtml, activeSlug = '') {
                     <button class="btn btn-ghost" type="button" data-refresh>Refresh Session</button>
                 </header>
                 <section class="content">
-                    ${security.warning ? `<div class="notice error" style="margin-bottom:16px;">${escapeHtml(security.warning)}</div>` : ''}
+                    ${security.warning ? `<div class="notice error shell-warning">${escapeHtml(security.warning)}</div>` : ''}
                     ${contentHtml}
                 </section>
             </main>
@@ -76,13 +77,10 @@ export function renderShell(root, contentHtml, activeSlug = '') {
 }
 
 function menuLink(menu, activeSlug) {
-    const href = menu.type === 'pengeluaran' || menu.type === 'rekap'
-        ? `#/form/${menu.slug}`
-        : '#/dashboard';
     const active = activeSlug === menu.slug ? ' is-active' : '';
 
     return `
-        <a class="menu-card${active}" href="${href}" style="min-height:auto;margin-bottom:10px;">
+        <a class="menu-card sidebar-menu-link${active}" href="${escapeHtml(menuHref(menu))}">
             <strong>${escapeHtml(menu.label)}</strong>
             <span>${escapeHtml(menu.type)}</span>
         </a>

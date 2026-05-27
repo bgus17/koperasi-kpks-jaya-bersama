@@ -7,11 +7,11 @@ Frontend statis untuk aktor API:
 
 Struktur:
 
-- `index.html`: entry point SPA.
-- `.htaccess`: header keamanan dan fallback SPA.
-- `assets/css`: design tokens dan komponen UI.
-- `assets/js/core`: konfigurasi, session, HTTP client, router, helper DOM, dan pemeriksaan konteks HTTPS.
-- `assets/js/modules`: layar login, dashboard, form transaksi, rekap, dan shell aplikasi.
+- `public/user/index.html`: entry point SPA.
+- `public/user/.htaccess`: header keamanan dan fallback SPA.
+- `public/user/assets/css`: design tokens dan komponen UI.
+- `public/user/assets/js/core`: konfigurasi, session, HTTP client, router, helper DOM, dan pemeriksaan konteks HTTPS.
+- `public/user/assets/js/modules`: layar login, dashboard, form transaksi, rekap, dan shell aplikasi.
 
 Catatan keamanan:
 

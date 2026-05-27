@@ -4,22 +4,23 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PengeluaranRequest;
-use App\Models\Karyawan;
 use App\Models\Pengeluaran;
 use App\Services\KeuanganLedgerService;
-use Illuminate\Http\Request;
+use App\Services\PengeluaranService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 
 class PengeluaranController extends Controller
 {
+    public function __construct(private PengeluaranService $pengeluaranService) {}
+
     /**
      * GET /api/pengeluaran
      * Ambil semua data pengeluaran dengan filter opsional.
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Pengeluaran::with($this->pengeluaranRelations());
+        $query = Pengeluaran::with($this->pengeluaranService->relations());
 
         if ($request->filled('tahun')) {
             $query->whereYear('tanggal', $request->tahun);
@@ -42,20 +43,20 @@ class PengeluaranController extends Controller
         }
 
         if ($request->filled('search')) {
-            $this->applySearch($query, $request->search);
+            $this->pengeluaranService->applySearch($query, $request->search);
         }
 
-        $perPage     = $request->input('per_page', 20);
+        $perPage = $request->input('per_page', 20);
         $pengeluaran = $query->orderBy('tanggal', 'desc')->orderBy('id', 'desc')->paginate($perPage);
 
         return response()->json([
             'success' => true,
-            'data'    => $pengeluaran->items(),
-            'meta'    => [
+            'data' => $pengeluaran->items(),
+            'meta' => [
                 'current_page' => $pengeluaran->currentPage(),
-                'last_page'    => $pengeluaran->lastPage(),
-                'per_page'     => $pengeluaran->perPage(),
-                'total'        => $pengeluaran->total(),
+                'last_page' => $pengeluaran->lastPage(),
+                'per_page' => $pengeluaran->perPage(),
+                'total' => $pengeluaran->total(),
             ],
         ]);
     }
@@ -66,18 +67,16 @@ class PengeluaranController extends Controller
      */
     public function store(PengeluaranRequest $request): JsonResponse
     {
-        $pengeluaran = null;
-
-        DB::transaction(function () use ($request, &$pengeluaran) {
-            $pengeluaran = Pengeluaran::create($request->pengeluaranData());
-            $this->syncDetail($pengeluaran, $request->detailData());
-            $this->syncPekerja($pengeluaran, $request->workerDetails());
-        });
+        $pengeluaran = $this->pengeluaranService->create(
+            $request->pengeluaranData(),
+            $request->detailData(),
+            $request->workerDetails()
+        );
 
         return response()->json([
             'success' => true,
             'message' => 'Data pengeluaran berhasil ditambahkan.',
-            'data'    => $pengeluaran->load($this->pengeluaranRelations()),
+            'data' => $pengeluaran->load($this->pengeluaranService->relations()),
         ], 201);
     }
 
@@ -89,7 +88,7 @@ class PengeluaranController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data'    => $pengeluaran->load($this->pengeluaranRelations()),
+            'data' => $pengeluaran->load($this->pengeluaranService->relations()),
         ]);
     }
 
@@ -99,16 +98,17 @@ class PengeluaranController extends Controller
      */
     public function update(PengeluaranRequest $request, Pengeluaran $pengeluaran): JsonResponse
     {
-        DB::transaction(function () use ($request, $pengeluaran) {
-            $pengeluaran->update($request->pengeluaranData());
-            $this->syncDetail($pengeluaran, $request->detailData());
-            $this->syncPekerja($pengeluaran, $request->workerDetails());
-        });
+        $pengeluaran = $this->pengeluaranService->update(
+            $pengeluaran,
+            $request->pengeluaranData(),
+            $request->detailData(),
+            $request->workerDetails()
+        );
 
         return response()->json([
             'success' => true,
             'message' => 'Data pengeluaran berhasil diperbarui.',
-            'data'    => $pengeluaran->fresh($this->pengeluaranRelations()),
+            'data' => $pengeluaran,
         ]);
     }
 
@@ -140,9 +140,9 @@ class PengeluaranController extends Controller
         $grandTotal = $summary->sum('total_jumlah');
 
         return response()->json([
-            'success'     => true,
-            'tahun'       => $tahun,
-            'data'        => $summary,
+            'success' => true,
+            'tahun' => $tahun,
+            'data' => $summary,
             'grand_total' => $grandTotal,
             'grand_total_ledger' => [
                 'debet' => $ledgerSummary['pengeluaran_debet'],
@@ -150,88 +150,5 @@ class PengeluaranController extends Controller
                 'saldo' => $ledgerSummary['pengeluaran_saldo'],
             ],
         ]);
-    }
-
-    private function pengeluaranRelations(): array
-    {
-        return array_merge(['kategori', 'sub', 'pekerjaDetail'], Pengeluaran::detailRelations());
-    }
-
-    private function applySearch($query, string $search): void
-    {
-        $query->where(function ($q) use ($search) {
-            $q->whereHas('sub', fn ($sub) => $sub->where('nama_sub', 'like', "%{$search}%"))
-                ->orWhereHas('kategori', fn ($kat) => $kat->where('nama_kategori', 'like', "%{$search}%"))
-                ->orWhereHas('pekerjaDetail', fn ($detail) => $detail->where('nama_karyawan_snapshot', 'like', "%{$search}%"))
-                ->orWhere('keterangan', 'like', "%{$search}%");
-
-            foreach ($this->detailSearchColumns() as $relation => $columns) {
-                $q->orWhereHas($relation, function ($detail) use ($columns, $search) {
-                    $detail->where(function ($detailQuery) use ($columns, $search) {
-                        foreach ($columns as $column) {
-                            $detailQuery->orWhere($column, 'like', "%{$search}%");
-                        }
-                    });
-                });
-            }
-        });
-    }
-
-    private function detailSearchColumns(): array
-    {
-        return [
-            'angkutanDetail' => ['blok', 'supplier_vendor', 'no_referensi'],
-            'panenDetail' => ['blok', 'mandor'],
-            'kutipBerondolDetail' => ['blok', 'mandor'],
-            'perawatanDetail' => ['blok', 'mandor'],
-            'pupukDetail' => ['blok', 'supplier_vendor', 'no_referensi'],
-            'alatBeratDetail' => ['blok', 'supplier_vendor', 'no_referensi'],
-            'perlengkapanDetail' => ['blok', 'supplier_vendor', 'no_referensi'],
-            'insentiveDetail' => ['supplier_vendor', 'no_referensi'],
-            'umumDetail' => ['supplier_vendor', 'no_referensi'],
-        ];
-    }
-
-    private function syncDetail(Pengeluaran $pengeluaran, array $detailData): void
-    {
-        $pengeluaran->loadMissing(['kategori', 'sub']);
-
-        $activeRelation = Pengeluaran::detailRelationForProfile($pengeluaran->detailProfile());
-
-        foreach (Pengeluaran::detailRelations() as $relation) {
-            if ($relation !== $activeRelation) {
-                $pengeluaran->{$relation}()->delete();
-            }
-        }
-
-        $pengeluaran->{$activeRelation}()->updateOrCreate(
-            ['pengeluaran_id' => $pengeluaran->id],
-            $detailData
-        );
-    }
-
-    private function syncPekerja(Pengeluaran $pengeluaran, array $details): void
-    {
-        $pengeluaran->pekerjaDetail()->delete();
-
-        if (empty($details)) {
-            return;
-        }
-
-        $karyawan = Karyawan::whereIn('id', collect($details)->pluck('karyawan_id'))
-            ->get()
-            ->keyBy('id');
-
-        foreach ($details as $detail) {
-            $worker = $karyawan->get($detail['karyawan_id']);
-
-            if (!$worker) {
-                continue;
-            }
-
-            $pengeluaran->pekerjaDetail()->create(array_merge($detail, [
-                'nama_karyawan_snapshot' => $worker->nama,
-            ]));
-        }
     }
 }

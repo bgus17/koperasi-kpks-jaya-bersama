@@ -1,4 +1,5 @@
 import { escapeHtml, setDocumentTitle } from '../core/dom.js';
+import { menuHref } from '../core/navigation.js';
 import { getSession } from '../core/session.js';
 import { renderShell } from './shell.js';
 
@@ -15,7 +16,7 @@ export function renderDashboard(root) {
         </div>
         <div class="menu-grid">
             ${menus.map((menu) => `
-                <a class="menu-card" href="${menu.type === 'pengeluaran' || menu.type === 'rekap' ? `#/form/${menu.slug}` : '#/dashboard'}">
+                <a class="menu-card" href="${escapeHtml(menuHref(menu))}">
                     <strong>${escapeHtml(menu.label)}</strong>
                     <span>${menu.capabilities?.map(escapeHtml).join(' / ') || escapeHtml(menu.type)}</span>
                 </a>

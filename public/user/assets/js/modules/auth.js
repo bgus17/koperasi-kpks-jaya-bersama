@@ -23,19 +23,19 @@ export function renderLogin(root) {
                         <label for="email">Email</label>
                         <input id="email" name="email" type="email" autocomplete="username" required placeholder="mandor@koperasi.com">
                     </div>
-                    <div class="field" style="margin-top:16px;">
+                    <div class="field auth-field-spaced">
                         <label for="password">Password</label>
                         <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="Password akun">
                     </div>
-                    <div data-login-message style="margin-top:16px;"></div>
-                    <button class="btn btn-primary" type="submit" style="width:100%;margin-top:18px;">Masuk</button>
+                    <div class="auth-message" data-login-message></div>
+                    <button class="btn btn-primary btn-block auth-submit" type="submit">Masuk</button>
                 </form>
             </div>
             <div class="auth-visual">
                 <div>
-                    <p class="eyebrow" style="color:rgba(255,255,255,.64);">Koperasi Cahaya Mulya</p>
+                    <p class="eyebrow">Koperasi Cahaya Mulya</p>
                     <h2 class="title">Input data biaya kebun lebih tertib, cepat, dan terlacak.</h2>
-                    <p class="subtitle" style="color:rgba(255,255,255,.72);">Akses menu mengikuti aktor pada use case, sementara validasi tetap dijaga di server.</p>
+                    <p class="subtitle">Akses menu mengikuti aktor pada use case, sementara validasi tetap dijaga di server.</p>
                 </div>
             </div>
         </section>

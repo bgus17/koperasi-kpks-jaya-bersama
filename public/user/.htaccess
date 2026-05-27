@@ -1,5 +1,9 @@
 Options -Indexes
 
+<FilesMatch "\.(md|env|log|sql|bak|tmp)$">
+    Require all denied
+</FilesMatch>
+
 <IfModule mod_headers.c>
     Header always set X-Content-Type-Options "nosniff"
     Header always set X-Frame-Options "DENY"
@@ -9,10 +13,14 @@ Options -Indexes
     <FilesMatch "\.(html)$">
         Header always set Cache-Control "no-store, max-age=0"
     </FilesMatch>
+    <FilesMatch "\.(css|js)$">
+        Header always set Cache-Control "public, max-age=3600, must-revalidate"
+    </FilesMatch>
 </IfModule>
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    RewriteRule \.(md|env|log|sql|bak|tmp)$ - [R=404,L]
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^ index.html [L]

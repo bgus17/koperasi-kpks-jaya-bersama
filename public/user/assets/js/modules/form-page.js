@@ -3,21 +3,19 @@ import { compactText, escapeHtml, qs, qsa, setDocumentTitle } from '../core/dom.
 import { renderShell } from './shell.js';
 import { bindRekap } from './rekap.js';
 
-let currentForm = null;
-
 export async function renderFormPage(root, slug) {
     setDocumentTitle('Form');
     renderShell(root, '<div class="notice">Memuat form...</div>', slug);
 
     try {
-        currentForm = await apiRequest(`/aktor/forms/${encodeURIComponent(slug)}`);
+        const payload = await apiRequest(`/aktor/forms/${encodeURIComponent(slug)}`);
 
-        if (currentForm.form?.mode === 'read_only') {
-            renderReadOnlyForm(root, currentForm);
+        if (payload.form?.mode === 'read_only') {
+            renderReadOnlyForm(root, payload);
             return;
         }
 
-        renderExpenseForm(root, currentForm);
+        renderExpenseForm(root, payload);
     } catch (error) {
         renderShell(root, `<div class="notice error">${escapeHtml(error.message)}</div>`, slug);
     }
@@ -38,11 +36,11 @@ function renderReadOnlyForm(root, payload) {
                     <label for="rekap-year">Tahun</label>
                     <input id="rekap-year" data-rekap-year type="number" min="2000" max="2100" value="${year}">
                 </div>
-                <div class="field" style="justify-content:end;">
+                <div class="field form-action-field">
                     <button class="btn btn-primary" type="button" data-load-rekap>Load Rekap</button>
                 </div>
             </div>
-            <div data-rekap-result style="margin-top:20px;"></div>
+            <div class="result-space" data-rekap-result></div>
         </div>
     `, payload.menu.slug);
 
@@ -60,7 +58,7 @@ function renderExpenseForm(root, payload) {
             <p class="subtitle">Pilih kegiatan, isi data transaksi, lalu kirim ke API. Kategori dan sub kegiatan dikunci oleh akses aktor.</p>
         </div>
         <div class="form-card">
-            <h2 style="margin-top:0;">Kegiatan</h2>
+            <h2 class="section-title">Kegiatan</h2>
             <div class="sub-list" data-sub-list>
                 ${(payload.sub_options ?? []).map((sub) => subButton(sub, firstSub?.id)).join('')}
             </div>
@@ -70,7 +68,7 @@ function renderExpenseForm(root, payload) {
             <div data-dynamic-form>
                 ${formHtmlForProfile(payload, selectedProfile)}
             </div>
-            <div class="btn-row" style="margin-top:20px;">
+            <div class="btn-row form-actions">
                 <button class="btn btn-primary" type="submit">Kirim Transaksi</button>
                 <button class="btn btn-outline" type="reset">Reset Form</button>
             </div>
@@ -124,7 +122,7 @@ function formHtmlForProfile(payload, profile) {
         <div class="toolbar">
             <div>
                 <p class="eyebrow">${escapeHtml(schema?.profile ?? profile)}</p>
-                <h2 style="margin:0;">${escapeHtml(schema?.title ?? 'Detail Operasional')}</h2>
+                <h2 class="toolbar-title">${escapeHtml(schema?.title ?? 'Detail Operasional')}</h2>
             </div>
         </div>
         <div class="form-grid">
@@ -146,7 +144,7 @@ function fieldHtml(field) {
 
     if (field.type === 'textarea') {
         return `
-            <div class="field" style="grid-column:1/-1;">
+            <div class="field field-full">
                 <label for="${escapeHtml(field.name)}">${escapeHtml(field.label)}${field.required ? ' *' : ''}</label>
                 <textarea id="${escapeHtml(field.name)}" data-field="${escapeHtml(field.name)}" ${field.required ? 'required' : ''}></textarea>
             </div>
@@ -202,8 +200,8 @@ function fieldHtml(field) {
 
 function workerSectionHtml(workers, workerFields) {
     return `
-        <div class="panel" style="box-shadow:none;margin-top:20px;">
-            <h3 style="margin-top:0;">Pekerja Lapangan</h3>
+        <div class="panel worker-panel">
+            <h3 class="section-title">Pekerja Lapangan</h3>
             <div class="worker-list">
                 ${workers.map((worker) => `
                     <div class="worker-item" data-worker-id="${escapeHtml(worker.id)}">

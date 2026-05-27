@@ -7,13 +7,11 @@ use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
-    /**
-     * A basic test example.
-     */
-    public function test_the_application_returns_a_successful_response(): void
+    public function test_gateway_page_is_visible_for_guests(): void
     {
         $response = $this->get('/');
 
-        $response->assertRedirect(route('pendapatan.index'));
+        $response->assertOk()
+            ->assertViewIs('gateway');
     }
 }

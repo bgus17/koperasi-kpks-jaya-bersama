@@ -99,6 +99,23 @@ a {
     padding: var(--space-6);
 }
 
+.auth-field-spaced,
+.auth-message {
+    margin-top: var(--space-4);
+}
+
+.auth-submit {
+    margin-top: 18px;
+}
+
+.auth-visual .eyebrow {
+    color: rgba(255, 255, 255, 0.64);
+}
+
+.auth-visual .subtitle {
+    color: rgba(255, 255, 255, 0.72);
+}
+
 .form-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -164,6 +181,10 @@ a {
     font-weight: 800;
     text-decoration: none;
     transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.btn-block {
+    width: 100%;
 }
 
 .btn:active {
@@ -247,6 +268,10 @@ a {
     font-size: 13px;
 }
 
+.actor-logout {
+    margin-top: 14px;
+}
+
 .main {
     min-width: 0;
 }
@@ -264,6 +289,10 @@ a {
 
 .content {
     padding: var(--space-8);
+}
+
+.shell-warning {
+    margin-bottom: var(--space-4);
 }
 
 .menu-grid {
@@ -289,6 +318,11 @@ a {
     border-color: var(--color-primary);
 }
 
+.sidebar-menu-link {
+    min-height: auto;
+    margin-bottom: 10px;
+}
+
 .menu-card strong {
     font-size: 18px;
 }
@@ -300,6 +334,32 @@ a {
 
 .panel {
     padding: var(--space-6);
+}
+
+.section-title {
+    margin-top: 0;
+}
+
+.toolbar-title {
+    margin: 0;
+}
+
+.field-full {
+    grid-column: 1 / -1;
+}
+
+.form-action-field {
+    justify-content: end;
+}
+
+.form-actions,
+.result-space,
+.worker-panel {
+    margin-top: var(--space-5);
+}
+
+.worker-panel {
+    box-shadow: none;
 }
 
 .panel + .panel,
