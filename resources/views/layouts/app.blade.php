@@ -7,7 +7,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Koperasi Cahaya Mulya') — Sistem Keuangan</title>
+    <title>@yield('title', 'KPKS Jaya Bersama') — Sistem Keuangan</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -18,7 +18,7 @@
 <aside class="sidebar">
     <div class="sidebar-brand">
         <div class="logo-icon">🌿</div>
-        <h1>Koperasi<br>Cahaya Mulya</h1>
+        <h1>KPKS<br>Jaya Bersama</h1>
         <p>Sistem Keuangan</p>
     </div>
 

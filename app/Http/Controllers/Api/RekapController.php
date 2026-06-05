@@ -34,17 +34,19 @@ class RekapController extends Controller
     public function show(Request $request, int $tahun): JsonResponse
     {
         $rekap = Rekap::where('tahun', $tahun)->firstOrFail();
+        $bulan = $this->bulanInput($request);
 
         // Ringkasan pendapatan per kategori
         $pendapatanSummary = Pendapatan::where('tahun', $tahun)
+            ->when($bulan, fn ($query) => $query->whereMonth('tanggal', $bulan))
             ->selectRaw('nomor_kategori, kategori, SUM(debet) as total_debet, SUM(kredit) as total_kredit')
             ->groupBy('nomor_kategori', 'kategori')
             ->orderBy('nomor_kategori')
             ->get();
 
         // Ringkasan pengeluaran per kategori
-        $pengeluaranSummary = KeuanganLedgerService::pengeluaranPerKategori($tahun);
-        $ledgerSummary = KeuanganLedgerService::summary($tahun);
+        $pengeluaranSummary = KeuanganLedgerService::pengeluaranPerKategori($tahun, $bulan);
+        $ledgerSummary = KeuanganLedgerService::summary($tahun, $bulan);
 
         return response()->json([
             'success' => true,
@@ -53,6 +55,7 @@ class RekapController extends Controller
                 'pendapatan_summary' => $pendapatanSummary,
                 'pengeluaran_summary'=> $pengeluaranSummary,
                 'ledger_summary'     => $ledgerSummary,
+                'laporan'            => KeuanganLedgerService::laporan($tahun, $bulan),
             ],
         ]);
     }
@@ -63,17 +66,20 @@ class RekapController extends Controller
      */
     public function laporanLengkap(Request $request): JsonResponse
     {
-        $tahun = $request->input('tahun', now()->year);
+        $tahun = (int) $request->input('tahun', now()->year);
+        $bulan = $this->bulanInput($request);
 
         $rekap = Rekap::where('tahun', $tahun)->first();
 
         $pendapatan = Pendapatan::where('tahun', $tahun)
+            ->when($bulan, fn ($query) => $query->whereMonth('tanggal', $bulan))
             ->orderBy('nomor_kategori')
             ->orderBy('id')
             ->get();
 
         $pengeluaran = Pengeluaran::with(array_merge(['kategori', 'sub'], Pengeluaran::detailRelations()))
             ->whereYear('tanggal', $tahun)
+            ->when($bulan, fn ($query) => $query->whereMonth('tanggal', $bulan))
             ->join('kategori_pengeluaran as kp', 'pengeluaran.kategori_id', '=', 'kp.id')
             ->join('sub_pengeluaran as sp', 'pengeluaran.sub_id', '=', 'sp.id')
             ->select('pengeluaran.*')
@@ -85,10 +91,19 @@ class RekapController extends Controller
         return response()->json([
             'success' => true,
             'tahun'   => $tahun,
+            'bulan'   => $bulan,
             'rekap'   => $rekap ? new RekapResource($rekap) : null,
-            'ledger_summary' => KeuanganLedgerService::summary((int) $tahun),
+            'ledger_summary' => KeuanganLedgerService::summary($tahun, $bulan),
+            'laporan' => KeuanganLedgerService::laporan($tahun, $bulan),
             'pendapatan'  => $pendapatan,
             'pengeluaran' => $pengeluaran,
         ]);
+    }
+
+    private function bulanInput(Request $request): ?int
+    {
+        $bulan = $request->filled('bulan') ? (int) $request->input('bulan') : null;
+
+        return $bulan >= 1 && $bulan <= 12 ? $bulan : null;
     }
 }

@@ -975,6 +975,137 @@ body.admin-panel {
     align-items: start;
 }
 
+.rekap-actions,
+.rekap-filter-form {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.ledger-shell {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--putih);
+    box-shadow: var(--shadow-sm);
+}
+
+.ledger-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+    background: #fbfaf6;
+}
+
+.ledger-head h3 {
+    margin: 0;
+    color: var(--hijau);
+    font-family: "DM Serif Display", Georgia, serif;
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 1.15;
+}
+
+.ledger-head p {
+    margin: 4px 0 0;
+    color: var(--abu);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .04em;
+}
+
+.ledger-period {
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 11px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--putih);
+    color: var(--hijau);
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.ledger-table-wrap {
+    border-bottom: 1px solid var(--border);
+}
+
+.admin-panel .ledger-table {
+    min-width: 860px;
+}
+
+.admin-panel .ledger-table th,
+.admin-panel .ledger-table td {
+    padding: 8px 10px;
+    border: 1px solid #d8d2c6;
+}
+
+.admin-panel .ledger-table th {
+    position: static;
+    background: #ede7d9;
+    text-align: center;
+}
+
+.ledger-no-col {
+    width: 86px;
+}
+
+.ledger-section-row td {
+    background: #f4f0e6;
+    color: var(--hijau);
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.ledger-total-row td,
+.ledger-balance-row td {
+    background: #fffdf8;
+    color: var(--hijau);
+    font-weight: 900;
+}
+
+.ledger-balance-row td:last-child {
+    background: var(--hijau);
+    color: var(--emas-lt);
+}
+
+.ledger-empty {
+    color: var(--abu);
+    font-style: italic;
+}
+
+.ledger-signatures {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) minmax(280px, 1.4fr);
+    gap: 28px;
+    padding: 26px 20px 32px;
+    color: var(--hijau);
+    text-align: center;
+}
+
+.ledger-signatures strong,
+.ledger-signatures span {
+    display: block;
+}
+
+.ledger-signatures strong {
+    margin-bottom: 18px;
+    font-size: 13px;
+    text-transform: uppercase;
+}
+
+.ledger-signatures span {
+    min-height: 22px;
+    color: var(--abu);
+    font-size: 12px;
+}
+
 .pagination-nav {
     display: flex;
     align-items: center;
@@ -1150,13 +1281,16 @@ body.admin-panel {
     }
 
     .filter-bar,
-    .page-header > div:last-child {
+    .page-header > div:last-child,
+    .rekap-filter-form,
+    .rekap-actions {
         width: 100%;
     }
 
     .filter-bar .form-group,
     .filter-bar .btn,
-    .page-header .btn {
+    .page-header .btn,
+    .rekap-filter-form .form-group {
         width: 100%;
     }
 

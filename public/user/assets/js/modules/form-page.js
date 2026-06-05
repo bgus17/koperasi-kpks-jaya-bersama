@@ -23,6 +23,20 @@ export async function renderFormPage(root, slug) {
 
 function renderReadOnlyForm(root, payload) {
     const year = new Date().getFullYear();
+    const months = [
+        ['1', 'Januari'],
+        ['2', 'Februari'],
+        ['3', 'Maret'],
+        ['4', 'April'],
+        ['5', 'Mei'],
+        ['6', 'Juni'],
+        ['7', 'Juli'],
+        ['8', 'Agustus'],
+        ['9', 'September'],
+        ['10', 'Oktober'],
+        ['11', 'November'],
+        ['12', 'Desember'],
+    ];
 
     renderShell(root, `
         <div class="panel">
@@ -35,6 +49,13 @@ function renderReadOnlyForm(root, payload) {
                 <div class="field">
                     <label for="rekap-year">Tahun</label>
                     <input id="rekap-year" data-rekap-year type="number" min="2000" max="2100" value="${year}">
+                </div>
+                <div class="field">
+                    <label for="rekap-month">Periode</label>
+                    <select id="rekap-month" data-rekap-month>
+                        <option value="">Tahunan</option>
+                        ${months.map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}
+                    </select>
                 </div>
                 <div class="field form-action-field">
                     <button class="btn btn-primary" type="button" data-load-rekap>Load Rekap</button>

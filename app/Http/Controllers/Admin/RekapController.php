@@ -2,70 +2,41 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\RekapKeuanganExport;
 use App\Http\Controllers\Controller;
 use App\Models\Rekap;
-use App\Models\Pendapatan;
-use App\Models\Pengeluaran;
 use App\Services\KeuanganLedgerService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class RekapController extends Controller
 {
     /**
-     * Tampilkan halaman rekap keuangan lengkap per tahun.
+     * Tampilkan halaman rekap keuangan realtime per tahun atau bulan.
      */
     public function index(Request $request)
     {
-        $tahun = $request->input('tahun', now()->year);
+        return view('rekap.index', $this->reportContext($request));
+    }
 
-        // Rekap grand total dari tabel rekap
-        $rekap = Rekap::where('tahun', $tahun)->first();
-        $ledgerSummary = KeuanganLedgerService::summary((int) $tahun);
+    public function exportPdf(Request $request)
+    {
+        $context = $this->reportContext($request);
+        $pdf = Pdf::loadView('rekap.pdf', $context)
+            ->setPaper('a4', 'portrait');
 
-        // Ringkasan pendapatan per kategori
-        $pendapatanPerKategori = Pendapatan::where('tahun', $tahun)
-            ->select('nomor_kategori', 'kategori',
-                DB::raw('SUM(debet) as total_debet'),
-                DB::raw('SUM(kredit) as total_kredit')
-            )
-            ->groupBy('nomor_kategori', 'kategori')
-            ->orderBy('nomor_kategori')
-            ->get();
+        return $pdf->download($this->exportFileName($context, 'pdf'));
+    }
 
-        // Ringkasan pengeluaran per kategori
-        $pengeluaranPerKategori = KeuanganLedgerService::pengeluaranPerKategori((int) $tahun);
+    public function exportExcel(Request $request)
+    {
+        $context = $this->reportContext($request);
 
-        // Semua data pendapatan detail untuk tabel lengkap
-        $pendapatanDetail = Pendapatan::where('tahun', $tahun)
-            ->orderBy('nomor_kategori')
-            ->orderBy('id')
-            ->get();
-
-        // Semua data pengeluaran detail untuk tabel lengkap
-        $pengeluaranDetail = Pengeluaran::with(array_merge(['kategori', 'sub'], Pengeluaran::detailRelations()))
-            ->whereYear('tanggal', $tahun)
-            ->join('kategori_pengeluaran as kp', 'pengeluaran.kategori_id', '=', 'kp.id')
-            ->join('sub_pengeluaran as sp', 'pengeluaran.sub_id', '=', 'sp.id')
-            ->select('pengeluaran.*')
-            ->orderBy('kp.nomor_kategori')
-            ->orderBy('sp.nomor_sub')
-            ->orderBy('pengeluaran.id')
-            ->get();
-
-        // Daftar tahun yang tersedia
-        $tahunList = KeuanganLedgerService::tahunList();
-
-        return view('rekap.index', compact(
-            'rekap',
-            'tahun',
-            'tahunList',
-            'pendapatanPerKategori',
-            'pengeluaranPerKategori',
-            'pendapatanDetail',
-            'pengeluaranDetail',
-            'ledgerSummary'
-        ));
+        return Excel::download(
+            new RekapKeuanganExport($context),
+            $this->exportFileName($context, 'xlsx')
+        );
     }
 
     /**
@@ -164,5 +135,51 @@ class RekapController extends Controller
 
         return redirect()->route('rekap.index', ['tahun' => $tahun])
             ->with('success', "Rekap tahun {$tahun} berhasil dihitung ulang.");
+    }
+
+    private function reportContext(Request $request): array
+    {
+        [$tahun, $bulan] = $this->periodInput($request);
+
+        $laporan = KeuanganLedgerService::laporan($tahun, $bulan);
+        $ledgerSummary = $laporan['summary'];
+        $rekap = Rekap::where('tahun', $tahun)->first();
+        $tahunList = KeuanganLedgerService::tahunList();
+        $bulanList = KeuanganLedgerService::bulanList();
+        $exportQuery = array_filter([
+            'tahun' => $tahun,
+            'bulan' => $bulan,
+        ], fn ($value) => $value !== null && $value !== '');
+
+        return compact(
+            'rekap',
+            'tahun',
+            'bulan',
+            'tahunList',
+            'bulanList',
+            'laporan',
+            'ledgerSummary',
+            'exportQuery'
+        );
+    }
+
+    private function periodInput(Request $request): array
+    {
+        $tahun = (int) $request->input('tahun', now()->year);
+        $tahun = $tahun >= 2000 && $tahun <= 2100 ? $tahun : now()->year;
+        $bulan = $request->filled('bulan') ? (int) $request->input('bulan') : null;
+        $bulan = $bulan >= 1 && $bulan <= 12 ? $bulan : null;
+
+        return [$tahun, $bulan];
+    }
+
+    private function exportFileName(array $context, string $extension): string
+    {
+        $periode = $context['laporan']['periode'];
+        $suffix = $periode['bulan']
+            ? $periode['tahun'] . '-' . str_pad((string) $periode['bulan'], 2, '0', STR_PAD_LEFT)
+            : (string) $periode['tahun'];
+
+        return "rekap-keuangan-{$suffix}.{$extension}";
     }
 }

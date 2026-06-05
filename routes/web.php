@@ -57,6 +57,8 @@ Route::group(['middleware' => ['auth', 'role:admin']], function () {
 
     // Rekap
     Route::get('rekap',           [RekapController::class, 'index'])->name('rekap.index');
+    Route::get('rekap/export/pdf',   [RekapController::class, 'exportPdf'])->name('rekap.export.pdf');
+    Route::get('rekap/export/excel', [RekapController::class, 'exportExcel'])->name('rekap.export.excel');
     Route::get('rekap/create',    [RekapController::class, 'create'])->name('rekap.create');
     Route::post('rekap',          [RekapController::class, 'store'])->name('rekap.store');
     Route::get('rekap/{rekap}/edit',   [RekapController::class, 'edit'])->name('rekap.edit');
