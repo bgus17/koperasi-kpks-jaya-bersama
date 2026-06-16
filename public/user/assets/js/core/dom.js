@@ -32,5 +32,5 @@ export function compactText(value, fallback = '-') {
 }
 
 export function setDocumentTitle(title) {
-    document.title = `${title} - Portal User Koperasi`;
+    document.title = `${title} - Portal User KPKS Jaya Bersama`;
 }

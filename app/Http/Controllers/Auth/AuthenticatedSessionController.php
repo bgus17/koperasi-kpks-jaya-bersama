@@ -22,7 +22,7 @@ class AuthenticatedSessionController extends Controller
 
     /**
      * Handle an incoming authentication request.
-     * Redirect sesuai role: admin → pendapatan, mandor/staff → SPA.
+     * Redirect sesuai role: admin → dashboard, mandor/staff → SPA.
      */
     public function store(LoginRequest $request): RedirectResponse
     {
@@ -34,7 +34,7 @@ class AuthenticatedSessionController extends Controller
 
         // Admin → Blade admin panel
         if ($user->hasEffectiveRole(User::ROLE_ADMIN)) {
-            return redirect()->intended(route('pendapatan.index'));
+            return redirect()->intended(route('dashboard'));
         }
 
         // Mandor / Staff → User Portal SPA

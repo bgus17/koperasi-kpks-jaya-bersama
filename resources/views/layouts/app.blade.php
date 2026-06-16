@@ -25,6 +25,14 @@
     <nav class="sidebar-nav">
         <div class="nav-label">Menu Utama</div>
 
+        <a href="{{ route('dashboard') }}"
+           class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M3 13h8V3H3v10ZM13 21h8V3h-8v18ZM3 21h8v-6H3v6Z"/>
+            </svg>
+            Dashboard
+        </a>
+
         <a href="{{ route('rekap.index') }}"
            class="nav-link {{ request()->routeIs('rekap.*') ? 'active' : '' }}">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">

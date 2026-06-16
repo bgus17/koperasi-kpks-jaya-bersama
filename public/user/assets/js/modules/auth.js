@@ -12,7 +12,7 @@ export function renderLogin(root) {
         <section class="auth-page">
             <div class="auth-panel">
                 <div>
-                    <div class="brand-mark">KC</div>
+                    <div class="brand-mark">KP</div>
                     <p class="eyebrow">Portal Aktor</p>
                     <h1 class="title">Masuk ke sistem lapangan</h1>
                     <p class="subtitle">Gunakan akun Mandor atau Staff/Operator untuk mengirim data transaksi lewat API.</p>
@@ -33,7 +33,7 @@ export function renderLogin(root) {
             </div>
             <div class="auth-visual">
                 <div>
-                    <p class="eyebrow">Koperasi Cahaya Mulya</p>
+                    <p class="eyebrow">KPKS Jaya Bersama</p>
                     <h2 class="title">Input data biaya kebun lebih tertib, cepat, dan terlacak.</h2>
                     <p class="subtitle">Akses menu mengikuti aktor pada use case, sementara validasi tetap dijaga di server.</p>
                 </div>

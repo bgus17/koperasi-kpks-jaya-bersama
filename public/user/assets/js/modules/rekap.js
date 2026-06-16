@@ -26,36 +26,38 @@ export function bindRekap(root) {
             const sections = response.laporan?.sections ?? [];
 
             target.innerHTML = `
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>No</th>
-                            <th>Keterangan</th>
-                            <th>Debet</th>
-                            <th>Kredit</th>
-                            <th>Saldo</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${sections.map(sectionHtml).join('')}
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <td>${escapeHtml(response.bulan ? `${response.bulan}-${response.tahun}` : response.tahun)}</td>
-                            <td><strong>Grand Total</strong></td>
-                            <td>${rupiah(ledger.total_debet)}</td>
-                            <td>${rupiah(ledger.total_kredit)}</td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td><strong>Saldo</strong></td>
-                            <td></td>
-                            <td></td>
-                            <td>${rupiah(ledger.saldo_akhir)}</td>
-                        </tr>
-                    </tfoot>
-                </table>
+                <div class="table-wrap">
+                    <table class="data-table ledger-table">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Keterangan</th>
+                                <th>Debet</th>
+                                <th>Kredit</th>
+                                <th>Saldo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${sections.map(sectionHtml).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr class="ledger-total-row">
+                                <td>${escapeHtml(response.bulan ? `${response.bulan}-${response.tahun}` : response.tahun)}</td>
+                                <td><strong>Grand Total</strong></td>
+                                <td>${rupiah(ledger.total_debet)}</td>
+                                <td>${rupiah(ledger.total_kredit)}</td>
+                                <td></td>
+                            </tr>
+                            <tr class="ledger-balance-row">
+                                <td></td>
+                                <td><strong>Saldo</strong></td>
+                                <td></td>
+                                <td></td>
+                                <td>${rupiah(ledger.saldo_akhir)}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
                 <p class="muted">${escapeHtml(ledger.jumlah_record ?? 0)} transaksi aktual.</p>
             `;
         } catch (error) {
@@ -68,7 +70,7 @@ function sectionHtml(section) {
     const rows = section.rows ?? [];
 
     return `
-        <tr>
+        <tr class="ledger-section-row">
             <td><strong>${escapeHtml(section.nomor)}</strong></td>
             <td><strong>${escapeHtml(String(section.nama ?? '').toUpperCase())}</strong></td>
             <td>-</td>

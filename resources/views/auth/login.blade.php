@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login — Koperasi Cahaya Mulya</title>
+    <title>Admin Login — KPKS Jaya Bersama</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&display=swap" rel="stylesheet">
     @vite(['resources/css/login.css'])
@@ -12,22 +12,18 @@
 
 <div class="branding">
     <div class="brand-logo">🌿</div>
-    <h1 class="brand-name">Koperasi<br><em>Cahaya Mulya</em></h1>
+    <h1 class="brand-name">KPKS<br><em>Jaya Bersama</em></h1>
     <p class="brand-desc">
         Panel administrasi untuk mengelola pendapatan, pengeluaran,
         data karyawan, dan rekap keuangan koperasi kelapa sawit.
     </p>
     <div class="brand-stats">
         <div class="bstat">
-            <div class="bstat-val">Rp 9,5M+</div>
-            <div class="bstat-label">Total Debet 2025</div>
-        </div>
-        <div class="bstat">
             <div class="bstat-val">11</div>
             <div class="bstat-label">Kategori</div>
         </div>
         <div class="bstat">
-            <div class="bstat-val">2025</div>
+            <div class="bstat-val">2026</div>
             <div class="bstat-label">Tahun Buku</div>
         </div>
     </div>

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Sistem Informasi Keuangan Koperasi Cahaya Mulya — Kelola pendapatan, pengeluaran, dan rekap keuangan koperasi kelapa sawit secara terintegrasi.">
-    <title>Koperasi Cahaya Mulya — Sistem Keuangan Internal</title>
+    <meta name="description" content="Sistem Informasi Keuangan Koperasi Jaya Bersama — Kelola pendapatan, pengeluaran, dan rekap keuangan koperasi kelapa sawit secara terintegrasi.">
+    <title>KPKS Jaya Bersama — Sistem Keuangan Internal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&display=swap" rel="stylesheet">
     @vite(['resources/css/gateway.css'])
@@ -16,7 +16,7 @@
     {{-- ── Company Header ── --}}
     <header class="company-header">
         <div class="company-logo">🌿</div>
-        <h1 class="company-name">Koperasi <em>Cahaya Mulya</em></h1>
+        <h1 class="company-name">KPKS <em>JAYA BERSAMA</em></h1>
         <p class="company-tagline">
             Sistem informasi keuangan terintegrasi untuk pengelolaan dana kebun,
             pendapatan, dan pengeluaran koperasi kelapa sawit.
@@ -29,7 +29,7 @@
     <section class="company-profile">
         <h2 class="profile-title">Profil Koperasi</h2>
         <p class="profile-desc">
-            Koperasi Produsen Kelapa Sawit (KPKS) Cahaya Mulya adalah koperasi yang bergerak
+            Koperasi Perkebunan Kelapa Sawit (KPKS) Jaya Bersama adalah koperasi yang bergerak
             di bidang perkebunan kelapa sawit. Didirikan dengan tujuan meningkatkan kesejahteraan
             anggota melalui pengelolaan kebun yang terstruktur dan transparan. Sistem ini dirancang
             untuk membantu pencatatan keuangan, monitoring biaya produksi, perawatan, dan pemakaian
@@ -97,7 +97,7 @@
 
     {{-- ── Footer ── --}}
     <footer class="gateway-footer">
-        <p>Koperasi Cahaya Mulya &copy; {{ date('Y') }} &mdash; Sistem Keuangan Internal</p>
+        <p>KPKS Jaya Bersama &copy; {{ date('Y') }} &mdash; Sistem Keuangan Internal</p>
     </footer>
 
 </div>

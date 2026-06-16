@@ -27,31 +27,43 @@ export function renderShell(root, contentHtml, activeSlug = '') {
     const actor = session?.actor ?? {};
     const menus = session?.menus ?? [];
     const security = securityContext();
+    const actorName = actor.name ?? 'User';
+    const actorRole = actor.role_label ?? actor.role ?? 'User';
+    const actorInitial = String(actorName).trim().charAt(0).toUpperCase() || 'U';
+    const currentYear = new Date().getFullYear();
 
     root.innerHTML = `
         <div class="app-shell">
             <aside class="sidebar">
-                <div>
-                    <div class="brand-mark">KC</div>
-                    <h1>Koperasi<br>Cahaya Mulya</h1>
-                    <small>Portal User API</small>
+                <div class="sidebar-brand">
+                    <div class="brand-mark">KP</div>
+                    <h1>KPKS<br>Jaya Bersama</h1>
+                    <p>Portal User</p>
                 </div>
-                <nav>
+                <nav class="sidebar-nav">
+                    <div class="nav-label">Menu Akses</div>
                     ${menus.map((menu) => menuLink(menu, activeSlug)).join('')}
                 </nav>
-                <div class="actor-card">
-                    <strong>${escapeHtml(actor.name)}</strong>
-                    <span>${escapeHtml(actor.role_label ?? actor.role)}</span>
-                    <button class="btn btn-outline btn-block actor-logout" type="button" data-logout>Logout</button>
+                <div class="sidebar-footer">
+                    <div class="user-info">
+                        <div class="user-avatar">${escapeHtml(actorInitial)}</div>
+                        <div>
+                            <div class="user-name">${escapeHtml(actorName)}</div>
+                            <div class="user-role">${escapeHtml(actorRole)}</div>
+                        </div>
+                    </div>
+                    <button class="btn-logout" type="button" data-logout>Logout</button>
                 </div>
             </aside>
             <main class="main">
                 <header class="topbar">
-                    <div>
-                        <p class="eyebrow">Portal User</p>
-                        <strong>${escapeHtml(actor.role_label ?? 'User')}</strong>
+                    <div class="topbar-title">
+                        ${escapeHtml(actorRole)}
                     </div>
-                    <button class="btn btn-ghost" type="button" data-refresh>Refresh Session</button>
+                    <div class="topbar-right">
+                        <span class="badge-tahun">Tahun Buku ${currentYear}</span>
+                        <button class="btn btn-outline btn-sm" type="button" data-refresh>Refresh</button>
+                    </div>
                 </header>
                 <section class="content">
                     ${security.warning ? `<div class="notice error shell-warning">${escapeHtml(security.warning)}</div>` : ''}
@@ -77,12 +89,15 @@ export function renderShell(root, contentHtml, activeSlug = '') {
 }
 
 function menuLink(menu, activeSlug) {
-    const active = activeSlug === menu.slug ? ' is-active' : '';
+    const active = activeSlug === menu.slug ? ' active' : '';
 
     return `
-        <a class="menu-card sidebar-menu-link${active}" href="${escapeHtml(menuHref(menu))}">
-            <strong>${escapeHtml(menu.label)}</strong>
-            <span>${escapeHtml(menu.type)}</span>
+        <a class="nav-link sidebar-menu-link${active}" href="${escapeHtml(menuHref(menu))}">
+            <span class="nav-dot"></span>
+            <span>
+                <strong>${escapeHtml(menu.label)}</strong>
+                <span>${escapeHtml(menu.type)}</span>
+            </span>
         </a>
     `;
 }

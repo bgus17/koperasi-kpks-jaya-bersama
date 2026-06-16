@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PendapatanController;
 use App\Http\Controllers\Admin\PengeluaranController;
 use App\Http\Controllers\Admin\RekapController;
@@ -23,7 +24,7 @@ Route::post('/admin/logout', [AuthController::class, 'logout'])
     ->name('admin.logout')
     ->middleware('auth');
 
-Route::get('/dashboard', fn () => redirect()->route('pendapatan.index'))
+Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'role:admin'])
     ->name('dashboard');
 

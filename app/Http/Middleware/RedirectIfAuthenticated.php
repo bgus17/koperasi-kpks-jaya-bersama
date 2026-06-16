@@ -14,7 +14,7 @@ class RedirectIfAuthenticated
      * Handle an incoming request.
      *
      * Jika user sudah login, redirect ke dashboard sesuai role.
-     * - Admin        → admin panel (pendapatan)
+     * - Admin        → admin panel (dashboard)
      * - Mandor/Staff → user portal SPA
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
@@ -28,7 +28,7 @@ class RedirectIfAuthenticated
                 $user = Auth::guard($guard)->user();
 
                 if ($user->hasEffectiveRole(User::ROLE_ADMIN)) {
-                    return redirect()->route('pendapatan.index');
+                    return redirect()->route('dashboard');
                 }
 
                 if ($user->hasEffectiveRole([User::ROLE_MANDOR, User::ROLE_STAFF_OPERATOR])) {

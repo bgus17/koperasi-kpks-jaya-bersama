@@ -54,7 +54,7 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('pendapatan.index'))
+        return redirect()->intended(route('dashboard'))
             ->with('success', 'Login berhasil. Selamat datang, ' . $user->name . '!');
     }
 
@@ -70,13 +70,13 @@ class AuthController extends Controller
 
     /**
      * Redirect user ke dashboard sesuai role-nya.
-     * - admin        → halaman pendapatan (admin panel blade)
+     * - admin        → dashboard admin panel blade
      * - mandor/staff → user portal SPA
      */
     private function redirectByRole(User $user)
     {
         if ($user->hasEffectiveRole(User::ROLE_ADMIN)) {
-            return redirect()->intended(route('pendapatan.index'));
+            return redirect()->intended(route('dashboard'));
         }
 
         if ($user->hasEffectiveRole([User::ROLE_MANDOR, User::ROLE_STAFF_OPERATOR])) {
