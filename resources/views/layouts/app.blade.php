@@ -15,7 +15,7 @@
 </head>
 <body class="admin-panel">
 
-<aside class="sidebar">
+<aside class="sidebar" id="admin-sidebar" data-mobile-sidebar>
     <div class="sidebar-brand">
         <div class="logo-icon">🌿</div>
         <h1>KPKS<br>Jaya Bersama</h1>
@@ -52,8 +52,11 @@
         </a>
 
         <button class="nav-link nav-dropdown-toggle {{ $isPengeluaran ? 'active' : '' }}"
+                type="button"
                 id="toggle-pengeluaran"
-                data-dropdown="drop-pengeluaran">
+                data-dropdown="drop-pengeluaran"
+                aria-controls="drop-pengeluaran"
+                aria-expanded="{{ $isPengeluaran ? 'true' : 'false' }}">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                 <path d="M2 8h20M2 12h20M2 16h12"/><circle cx="19" cy="16" r="3"/>
                 <path d="m21 18-2-2"/>
@@ -148,9 +151,19 @@
     </div>
 </aside>
 
+<button class="mobile-sidebar-overlay" type="button" data-sidebar-close aria-label="Tutup menu"></button>
+
 <div class="main-wrap">
     <header class="topbar">
-        <div class="topbar-title">@yield('page-title', 'Dashboard')</div>
+        <div class="topbar-left">
+            <button class="mobile-menu-button" type="button" data-sidebar-toggle aria-controls="admin-sidebar" aria-expanded="false">
+                <span class="sr-only">Menu</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                    <path d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+            <div class="topbar-title">@yield('page-title', 'Dashboard')</div>
+        </div>
         <div class="topbar-right">
             <span class="badge-tahun">Tahun Buku {{ date('Y') }}</span>
         </div>
@@ -158,14 +171,24 @@
 
     <main class="content">
         @if(session('success'))
-            <div class="alert alert-success">
-                ✓ {{ session('success') }}
+            <div class="alert alert-success" role="status">
+                <span>✓ {{ session('success') }}</span>
+                <button class="alert-close" type="button" data-alert-close aria-label="Tutup notifikasi">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" aria-hidden="true">
+                        <path d="M18 6 6 18M6 6l12 12"/>
+                    </svg>
+                </button>
             </div>
         @endif
 
         @if(session('error'))
-            <div class="alert alert-error">
-                ✕ {{ session('error') }}
+            <div class="alert alert-error" role="alert">
+                <span>✕ {{ session('error') }}</span>
+                <button class="alert-close" type="button" data-alert-close aria-label="Tutup notifikasi">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" aria-hidden="true">
+                        <path d="M18 6 6 18M6 6l12 12"/>
+                    </svg>
+                </button>
             </div>
         @endif
 

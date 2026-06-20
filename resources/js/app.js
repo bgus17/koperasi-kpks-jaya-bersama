@@ -126,11 +126,137 @@ function initDropdowns() {
         }
 
         toggle.addEventListener('click', () => {
-            target.classList.toggle('open');
-            toggle.classList.toggle('active');
-            chevron?.classList.toggle('open');
+            const isOpen = target.classList.toggle('open');
+
+            toggle.classList.toggle('active', isOpen);
+            chevron?.classList.toggle('open', isOpen);
+            toggle.setAttribute('aria-expanded', String(isOpen));
         });
     });
+}
+
+function initMobileSidebar() {
+    const sidebar = document.querySelector('[data-mobile-sidebar]');
+    const toggle = document.querySelector('[data-sidebar-toggle]');
+    const closeTriggers = document.querySelectorAll('[data-sidebar-close]');
+
+    if (!sidebar || !toggle) {
+        return;
+    }
+
+    const mobileQuery = window.matchMedia('(max-width: 860px)');
+
+    const syncSidebarState = () => {
+        const isOpen = document.body.classList.contains('sidebar-open');
+
+        toggle.setAttribute('aria-expanded', String(isOpen));
+
+        if (mobileQuery.matches) {
+            sidebar.setAttribute('aria-hidden', String(!isOpen));
+            return;
+        }
+
+        document.body.classList.remove('sidebar-open');
+        sidebar.removeAttribute('aria-hidden');
+        toggle.setAttribute('aria-expanded', 'false');
+    };
+
+    const openSidebar = () => {
+        document.body.classList.add('sidebar-open');
+        syncSidebarState();
+    };
+
+    const closeSidebar = () => {
+        document.body.classList.remove('sidebar-open');
+        syncSidebarState();
+    };
+
+    toggle.addEventListener('click', () => {
+        if (document.body.classList.contains('sidebar-open')) {
+            closeSidebar();
+            return;
+        }
+
+        openSidebar();
+    });
+
+    closeTriggers.forEach((trigger) => trigger.addEventListener('click', closeSidebar));
+
+    sidebar.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', () => {
+            if (mobileQuery.matches) {
+                closeSidebar();
+            }
+        });
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeSidebar();
+        }
+    });
+
+    mobileQuery.addEventListener('change', syncSidebarState);
+    syncSidebarState();
+}
+
+function initDismissibleAlerts(root = document) {
+    root.querySelectorAll('[data-alert-close]').forEach((button) => {
+        button.addEventListener('click', () => {
+            button.closest('.alert')?.remove();
+        });
+    });
+}
+
+function initResponsiveTables(root = document) {
+    const selector = '.table-wrap table, .card table';
+    const tables = [
+        ...(root.matches?.(selector) ? [root] : []),
+        ...Array.from(root.querySelectorAll?.(selector) || []),
+    ];
+
+    tables.forEach((table) => {
+        if (table.dataset.responsiveBound === '1') {
+            return;
+        }
+
+        const headers = Array.from(table.querySelectorAll('thead th')).map((header) => header.textContent.trim());
+
+        if (headers.length === 0) {
+            return;
+        }
+
+        table.querySelectorAll('tbody tr, tfoot tr').forEach((row) => {
+            Array.from(row.children).forEach((cell, index) => {
+                if (!cell.hasAttribute('data-label')) {
+                    cell.setAttribute('data-label', headers[index] || '');
+                }
+            });
+        });
+
+        table.dataset.responsiveBound = '1';
+    });
+}
+
+function watchResponsiveContent() {
+    const content = document.querySelector('.content');
+
+    if (!content) {
+        return;
+    }
+
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    initResponsiveTables(node);
+                    initDismissibleAlerts(node);
+                }
+            });
+        });
+    });
+
+    observer.observe(content, { childList: true, subtree: true });
 }
 
 function initRupiahInputs(root = document) {
@@ -395,6 +521,10 @@ function initActivityForms() {
 
 document.addEventListener('DOMContentLoaded', () => {
     initDropdowns();
+    initMobileSidebar();
+    initDismissibleAlerts();
+    initResponsiveTables();
+    watchResponsiveContent();
     initRupiahInputs();
     initActivityForms();
 });

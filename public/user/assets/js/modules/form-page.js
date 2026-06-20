@@ -119,11 +119,11 @@ function bindExpenseForm(root, payload, initialSub) {
             qsa('[data-sub-id]', root).forEach((item) => item.classList.remove('is-active'));
             button.classList.add('is-active');
             dynamicForm.innerHTML = formHtmlForProfile(payload, selectedSub.jenis_detail);
-            bindAutoTotal(root);
+            bindInteractiveFormEvents(root);
         });
     });
 
-    bindAutoTotal(root);
+    bindInteractiveFormEvents(root);
 
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -223,9 +223,13 @@ function workerSectionHtml(workers, workerFields) {
     return `
         <div class="panel worker-panel">
             <h3 class="section-title">Pekerja Lapangan</h3>
+            <div class="worker-toolbar" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap: 10px; flex-wrap: wrap;">
+                <input type="text" data-worker-search placeholder="Cari nama karyawan..." style="max-width: 300px; width: 100%; padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size:13px; color:var(--hijau); outline:none;">
+                <span data-worker-summary style="font-size:12.5px; color:var(--abu); font-weight:600;">0 pekerja dipilih</span>
+            </div>
             <div class="worker-list">
                 ${workers.map((worker) => `
-                    <div class="worker-item" data-worker-id="${escapeHtml(worker.id)}">
+                    <div class="worker-item" data-worker-id="${escapeHtml(worker.id)}" data-worker-name="${escapeHtml(String(worker.nama).toLowerCase())}">
                         <label class="worker-head">
                             <input type="checkbox" data-worker-selected>
                             <span>
@@ -267,28 +271,139 @@ function workerFieldHtml(field) {
     `;
 }
 
-function bindAutoTotal(root) {
-    const volume = qs('[data-field="volume"]', root);
-    const rate = qs('[data-field="harga_satuan"]', root);
-    const total = qs('[data-field="jumlah"]', root);
+function bindInteractiveFormEvents(root) {
+    const form = qs('[data-expense-form]', root);
+    if (!form) return;
 
-    if (!volume || !rate || !total) {
-        return;
-    }
+    const mainVolume = qs('[data-field="volume"]', root);
+    const mainRate = qs('[data-field="harga_satuan"]', root);
+    const mainTotal = qs('[data-field="jumlah"]', root);
 
-    const sync = () => {
-        const value = Number(volume.value || 0) * cleanNumber(rate.value);
+    const workerItems = qsa('[data-worker-id]', root);
+    const workerSearch = qs('[data-worker-search]', root);
+    const workerSummary = qs('[data-worker-summary]', root);
 
-        if (value > 0 && total.dataset.touched !== '1') {
-            total.value = String(Math.round(value));
+    const getSelectedWorkers = () => {
+        return Array.from(workerItems).filter(item => {
+            return qs('[data-worker-selected]', item)?.checked;
+        });
+    };
+
+    const getWorkerBase = (item) => {
+        const vol = qs('[data-worker-field="volume"]', item)?.value || '';
+        const hk = qs('[data-worker-field="hk"]', item)?.value || '';
+        const luas = qs('[data-worker-field="luas_ha"]', item)?.value || '';
+        return Number(vol || hk || luas || 0);
+    };
+
+    const getWorkerRate = (item) => {
+        const rateInput = qs('[data-worker-field="tarif_satuan"]', item);
+        return cleanNumber(rateInput?.value || 0);
+    };
+
+    const calculateWorkerPay = (item) => {
+        const upahInput = qs('[data-worker-field="upah"]', item);
+        if (!upahInput) return;
+
+        const base = getWorkerBase(item);
+        const rate = getWorkerRate(item);
+        if (base > 0 && rate > 0) {
+            upahInput.value = String(Math.round(base * rate));
         }
     };
 
-    total.addEventListener('input', () => {
-        total.dataset.touched = '1';
+    const recalculateGrandTotals = () => {
+        const selected = getSelectedWorkers();
+        if (workerSummary) {
+            workerSummary.textContent = `${selected.length} pekerja dipilih`;
+        }
+
+        if (selected.length > 0) {
+            let totalVolumeValue = 0;
+            let totalUpahValue = 0;
+
+            selected.forEach(item => {
+                totalVolumeValue += getWorkerBase(item);
+                const upahInput = qs('[data-worker-field="upah"]', item);
+                totalUpahValue += cleanNumber(upahInput?.value || 0);
+            });
+
+            if (mainVolume) {
+                mainVolume.value = totalVolumeValue > 0 ? String(totalVolumeValue) : '';
+            }
+            if (mainTotal) {
+                mainTotal.value = totalUpahValue > 0 ? String(totalUpahValue) : '';
+                mainTotal.readOnly = true;
+            }
+        } else {
+            if (mainTotal) {
+                mainTotal.readOnly = false;
+            }
+        }
+    };
+
+    // Bind worker rows interactions
+    workerItems.forEach(item => {
+        const checkbox = qs('[data-worker-selected]', item);
+        
+        const syncRowState = () => {
+            const isChecked = checkbox?.checked ?? false;
+            item.classList.toggle('is-selected', isChecked);
+        };
+
+        if (checkbox) {
+            // Initial sync
+            syncRowState();
+
+            checkbox.addEventListener('change', () => {
+                syncRowState();
+                recalculateGrandTotals();
+            });
+        }
+
+        // Bind worker inputs changes
+        item.querySelectorAll('input, select').forEach(input => {
+            if (input !== checkbox) {
+                const handleInput = () => {
+                    calculateWorkerPay(item);
+                    recalculateGrandTotals();
+                };
+                input.addEventListener('input', handleInput);
+                input.addEventListener('change', handleInput);
+            }
+        });
     });
-    volume.addEventListener('input', sync);
-    rate.addEventListener('input', sync);
+
+    // Bind worker search
+    if (workerSearch) {
+        workerSearch.addEventListener('input', () => {
+            const query = workerSearch.value.trim().toLowerCase();
+            workerItems.forEach(item => {
+                const name = item.dataset.workerName || '';
+                item.style.display = !query || name.includes(query) ? '' : 'none';
+            });
+        });
+    }
+
+    // Bind main auto total (when no workers selected)
+    if (mainVolume && mainRate && mainTotal) {
+        const syncMainTotal = () => {
+            const selected = getSelectedWorkers();
+            if (selected.length === 0) {
+                const vol = Number(mainVolume.value || 0);
+                const rate = cleanNumber(mainRate.value);
+                if (vol > 0 && rate > 0 && mainTotal.dataset.touched !== '1') {
+                    mainTotal.value = String(Math.round(vol * rate));
+                }
+            }
+        };
+
+        mainTotal.addEventListener('input', () => {
+            mainTotal.dataset.touched = '1';
+        });
+        mainVolume.addEventListener('input', syncMainTotal);
+        mainRate.addEventListener('input', syncMainTotal);
+    }
 }
 
 async function submitExpenseForm(root, form, selectedSub) {

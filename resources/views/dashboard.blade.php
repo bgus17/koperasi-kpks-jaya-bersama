@@ -15,16 +15,6 @@
         <h2>Dashboard Keuangan</h2>
         <p>Ikhtisar kondisi kas, pendapatan, biaya operasional, dan transaksi terbaru untuk {{ $periodeLabel }}.</p>
     </div>
-    <div class="dashboard-actions">
-        <a href="{{ route('pendapatan.create') }}" class="btn btn-primary">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
-            Pendapatan
-        </a>
-        <a href="{{ route('pengeluaran.create') }}" class="btn btn-outline">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
-            Pengeluaran
-        </a>
-    </div>
 </div>
 
 <div class="card dashboard-filter-card">
